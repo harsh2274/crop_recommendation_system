@@ -1,0 +1,1727 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-11-14T21:55:33.055Z",
+  "field": {
+    "fieldId": "demo-iowa-001",
+    "centroid": {
+      "lat": 42.1,
+      "lon": -93.75
+    },
+    "areaHa": 63.95,
+    "bbox": [
+      -93.754879,
+      42.096363,
+      -93.74512,
+      42.103631
+    ],
+    "elevationM": 316,
+    "slopePct": 4.9,
+    "lowSpotSharePct": 0,
+    "region": {
+      "country": "United States",
+      "countryIso3": "USA",
+      "admin1": "Iowa",
+      "admin1Code": "IA",
+      "county": "Boone County",
+      "countyFips": "19015"
+    },
+    "sourceCrs": "EPSG:32615"
+  },
+  "context": {
+    "farmer": {
+      "id": "farmer-42",
+      "name": "Demo Farmer",
+      "region": "Boone County, IA",
+      "experienceYears": 25
+    },
+    "priorities": {
+      "soilHealth": 5,
+      "water": 2,
+      "resilience": 4,
+      "pest": 4,
+      "erosion": 4,
+      "income": 4
+    },
+    "constraints": {
+      "irrigation": "none",
+      "irrigationCapacityMm": 0,
+      "excludeCrops": [
+        "potato"
+      ],
+      "slopePct": null
+    },
+    "currentRotation": [
+      {
+        "crop": "corn"
+      },
+      {
+        "crop": "soybean"
+      }
+    ],
+    "rotationSource": "farmer",
+    "currentSeason": {
+      "crop": "corn",
+      "plantingDate": "2026-05-02",
+      "growthStage": "harvested",
+      "schedule": [
+        {
+          "task": "harvest",
+          "date": "2026-10-15"
+        }
+      ]
+    },
+    "observedIssues": [
+      "standing water in low spots every spring",
+      "corn rootworm pressure increasing"
+    ],
+    "farmerOutcomes": [],
+    "unresolvedCrops": []
+  },
+  "dataSources": [
+    {
+      "id": "nasa_power",
+      "dataset": "NASA POWER daily point data (MERRA-2 based)",
+      "provider": "NASA LaRC",
+      "variables": [
+        "T2M_MAX",
+        "T2M_MIN",
+        "PRECTOTCORR",
+        "RH2M",
+        "GWETROOT",
+        "ALLSKY_SFC_SW_DWN",
+        "WS2M"
+      ],
+      "spatialResolution": "0.5 x 0.625 deg",
+      "temporalCoverage": "2006-2025, daily",
+      "status": "ok"
+    },
+    {
+      "id": "noaa_ghcn",
+      "dataset": "NOAA GHCN-Daily nearest station (temperature correction)",
+      "provider": "NOAA NCEI",
+      "variables": [
+        "TMAX",
+        "TMIN"
+      ],
+      "spatialResolution": "station point",
+      "temporalCoverage": "2016-2025, daily",
+      "status": "ok",
+      "note": "USC00130200, 9 km"
+    },
+    {
+      "id": "modis_ndvi",
+      "dataset": "MODIS MOD13Q1 v061 NDVI",
+      "provider": "NASA LP DAAC via ORNL DAAC",
+      "variables": [
+        "250m_16_days_NDVI"
+      ],
+      "spatialResolution": "250 m",
+      "temporalCoverage": "2023-present, 16-day",
+      "status": "unavailable",
+      "note": "timed out; the fetch finishes in the background and is cached"
+    },
+    {
+      "id": "soil",
+      "dataset": "USDA SSURGO (Soil Data Access), 0-30 cm",
+      "provider": "USDA NRCS",
+      "variables": [
+        "sand",
+        "clay",
+        "om",
+        "pH",
+        "awc",
+        "drainage class",
+        "hydrologic group"
+      ],
+      "spatialResolution": "survey map units (1:12,000-1:24,000)",
+      "temporalCoverage": "static",
+      "status": "ok"
+    },
+    {
+      "id": "srtm",
+      "dataset": "SRTM GL1 elevation",
+      "provider": "NASA/USGS via OpenTopography",
+      "variables": [
+        "elevation",
+        "slope",
+        "topographic wetness index"
+      ],
+      "spatialResolution": "30 m",
+      "temporalCoverage": "static (2000)",
+      "status": "ok"
+    },
+    {
+      "id": "usda_cdl",
+      "dataset": "USDA NASS Cropland Data Layer (field history)",
+      "provider": "USDA NASS via CropScape",
+      "variables": [
+        "crop class at field centroid"
+      ],
+      "spatialResolution": "30 m",
+      "temporalCoverage": "last 8 years, yearly",
+      "status": "ok"
+    },
+    {
+      "id": "eonet",
+      "dataset": "NASA EONET natural events within ~50 km",
+      "provider": "NASA",
+      "variables": [
+        "wildfires",
+        "floods",
+        "severe storms",
+        "drought"
+      ],
+      "spatialResolution": "event locations",
+      "temporalCoverage": "past 365 days",
+      "status": "ok"
+    },
+    {
+      "id": "market_prices",
+      "dataset": "IMF world commodity prices + US CPI (via DBnomics)",
+      "provider": "IMF / US BLS via DBnomics",
+      "variables": [
+        "corn, soybean, wheat USD/t",
+        "CPI-U"
+      ],
+      "spatialResolution": "world benchmark",
+      "temporalCoverage": "1990-latest DBnomics update, monthly",
+      "status": "ok",
+      "note": "updated 2026-11-14"
+    },
+    {
+      "id": "usda_psd",
+      "dataset": "USDA FAS PSD supply and demand (US)",
+      "provider": "USDA FAS",
+      "variables": [
+        "production",
+        "exports",
+        "domestic consumption",
+        "ending stocks",
+        "yield"
+      ],
+      "spatialResolution": "United States",
+      "temporalCoverage": "1960-present (incl. current projection), annual",
+      "status": "ok"
+    }
+  ],
+  "climate": {
+    "period": {
+      "startYear": 2006,
+      "endYear": 2025,
+      "years": 20
+    },
+    "baseline": {
+      "hemisphere": "north",
+      "stationCorrection": {
+        "stationId": "USC00130200",
+        "name": "AMES 8 WSW, IA US",
+        "distanceKm": 9,
+        "overlapYears": 10,
+        "tmaxOffsetC": [
+          0.7,
+          0.17,
+          0.93,
+          0.96,
+          0.75,
+          1.01,
+          -0.2,
+          -0.74,
+          0.48,
+          1.23,
+          1.12,
+          1.24
+        ],
+        "tminOffsetC": [
+          0.61,
+          -0.09,
+          0.9,
+          0.54,
+          0.64,
+          0.26,
+          -0.66,
+          -0.72,
+          -0.31,
+          0.28,
+          0.24,
+          0.06
+        ]
+      },
+      "warmingAdjustmentCPerDecade": null
+    },
+    "annual": {
+      "tmeanC": 10.3,
+      "precipMm": 860,
+      "et0Mm": 937,
+      "aridityIndex": 0.92,
+      "gddBase10": 2022,
+      "rainfallErosivity": 2576
+    },
+    "frost": {
+      "lastSpringMedian": "04-19",
+      "lastSpring90": "04-29",
+      "firstFallMedian": "10-22",
+      "firstFall10": "10-10",
+      "frostFreeDaysMedian": 183
+    },
+    "extremes": {
+      "wetDayP95Mm": 24.5,
+      "max5DayPrecipMm": 76,
+      "longestDrySpellDays": 13
+    },
+    "recentYear": {
+      "year": 2025,
+      "precipAnomalyPct": 7,
+      "rootZoneWetnessZ": -0.37
+    },
+    "trends": {
+      "tmeanC": {
+        "perDecade": 0.753,
+        "significant": false
+      },
+      "precipMm": {
+        "perDecade": -99.927,
+        "significant": false
+      },
+      "heavyRainDays": {
+        "perDecade": -0.902,
+        "significant": false
+      },
+      "extremeHeatDays": {
+        "perDecade": 0.647,
+        "significant": false
+      },
+      "rootZoneWetness": {
+        "perDecade": -0.032,
+        "significant": false
+      }
+    },
+    "monthly": [
+      {
+        "month": 1,
+        "tmeanC": -5.7,
+        "tmaxC": -1.1,
+        "tminC": -10.4,
+        "precipMm": 24,
+        "et0Mm": 14,
+        "waterBalanceMm": 10,
+        "rootZoneWetness": 0.52,
+        "frostDays": 30.2,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0,
+        "diseaseRiskDays": 0,
+        "erosivityShare": 0.005
+      },
+      {
+        "month": 2,
+        "tmeanC": -4.5,
+        "tmaxC": 0.9,
+        "tminC": -10,
+        "precipMm": 25,
+        "et0Mm": 22,
+        "waterBalanceMm": 3,
+        "rootZoneWetness": 0.53,
+        "frostDays": 27.1,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0.1,
+        "diseaseRiskDays": 0,
+        "erosivityShare": 0.011
+      },
+      {
+        "month": 3,
+        "tmeanC": 4.5,
+        "tmaxC": 10.5,
+        "tminC": -1.4,
+        "precipMm": 52,
+        "et0Mm": 53,
+        "waterBalanceMm": -2,
+        "rootZoneWetness": 0.54,
+        "frostDays": 20,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0.2,
+        "diseaseRiskDays": 0.3,
+        "erosivityShare": 0.037
+      },
+      {
+        "month": 4,
+        "tmeanC": 10.3,
+        "tmaxC": 17,
+        "tminC": 3.7,
+        "precipMm": 86,
+        "et0Mm": 85,
+        "waterBalanceMm": 1,
+        "rootZoneWetness": 0.55,
+        "frostDays": 7.7,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0.6,
+        "diseaseRiskDays": 0.7,
+        "erosivityShare": 0.109
+      },
+      {
+        "month": 5,
+        "tmeanC": 16.9,
+        "tmaxC": 23,
+        "tminC": 10.8,
+        "precipMm": 112,
+        "et0Mm": 118,
+        "waterBalanceMm": -7,
+        "rootZoneWetness": 0.55,
+        "frostDays": 0.2,
+        "extremeHeatDays": 0.1,
+        "heavyRainDays": 0.7,
+        "diseaseRiskDays": 3.1,
+        "erosivityShare": 0.133
+      },
+      {
+        "month": 6,
+        "tmeanC": 22.7,
+        "tmaxC": 28.7,
+        "tminC": 16.7,
+        "precipMm": 130,
+        "et0Mm": 144,
+        "waterBalanceMm": -13,
+        "rootZoneWetness": 0.52,
+        "frostDays": 0,
+        "extremeHeatDays": 0.8,
+        "heavyRainDays": 0.9,
+        "diseaseRiskDays": 4.8,
+        "erosivityShare": 0.177
+      },
+      {
+        "month": 7,
+        "tmeanC": 23.6,
+        "tmaxC": 29.4,
+        "tminC": 17.9,
+        "precipMm": 97,
+        "et0Mm": 153,
+        "waterBalanceMm": -56,
+        "rootZoneWetness": 0.48,
+        "frostDays": 0,
+        "extremeHeatDays": 2.5,
+        "heavyRainDays": 0.7,
+        "diseaseRiskDays": 4.5,
+        "erosivityShare": 0.119
+      },
+      {
+        "month": 8,
+        "tmeanC": 22.4,
+        "tmaxC": 28.1,
+        "tminC": 16.7,
+        "precipMm": 108,
+        "et0Mm": 132,
+        "waterBalanceMm": -23,
+        "rootZoneWetness": 0.45,
+        "frostDays": 0,
+        "extremeHeatDays": 1.6,
+        "heavyRainDays": 0.9,
+        "diseaseRiskDays": 4,
+        "erosivityShare": 0.153
+      },
+      {
+        "month": 9,
+        "tmeanC": 19.2,
+        "tmaxC": 25.8,
+        "tminC": 12.6,
+        "precipMm": 77,
+        "et0Mm": 101,
+        "waterBalanceMm": -24,
+        "rootZoneWetness": 0.45,
+        "frostDays": 0,
+        "extremeHeatDays": 0.6,
+        "heavyRainDays": 0.3,
+        "diseaseRiskDays": 2.8,
+        "erosivityShare": 0.086
+      },
+      {
+        "month": 10,
+        "tmeanC": 12.1,
+        "tmaxC": 18.5,
+        "tminC": 5.6,
+        "precipMm": 72,
+        "et0Mm": 67,
+        "waterBalanceMm": 5,
+        "rootZoneWetness": 0.47,
+        "frostDays": 4.5,
+        "extremeHeatDays": 0.1,
+        "heavyRainDays": 0.6,
+        "diseaseRiskDays": 1.9,
+        "erosivityShare": 0.106
+      },
+      {
+        "month": 11,
+        "tmeanC": 4.3,
+        "tmaxC": 9.9,
+        "tminC": -1.3,
+        "precipMm": 37,
+        "et0Mm": 32,
+        "waterBalanceMm": 5,
+        "rootZoneWetness": 0.49,
+        "frostDays": 18.8,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0.1,
+        "diseaseRiskDays": 0.3,
+        "erosivityShare": 0.03
+      },
+      {
+        "month": 12,
+        "tmeanC": -2.6,
+        "tmaxC": 2.2,
+        "tminC": -7.5,
+        "precipMm": 39,
+        "et0Mm": 16,
+        "waterBalanceMm": 24,
+        "rootZoneWetness": 0.5,
+        "frostDays": 29,
+        "extremeHeatDays": 0,
+        "heavyRainDays": 0.1,
+        "diseaseRiskDays": 0,
+        "erosivityShare": 0.034
+      }
+    ]
+  },
+  "soil": {
+    "source": "ssurgo+soil_test",
+    "clayPct": 31,
+    "sandPct": 35.4,
+    "siltPct": 33.6,
+    "texture": "clay loam",
+    "organicMatterPct": 3.8,
+    "ph": 6.4,
+    "availableWaterMmPerM": 210,
+    "erodibilityK": 0.0164,
+    "drainageClass": "Poorly drained",
+    "hydrologicGroup": "C/D"
+  },
+  "vegetation": null,
+  "fieldHistory": [
+    {
+      "year": 2018,
+      "code": 1,
+      "category": "Corn",
+      "cropId": "corn"
+    },
+    {
+      "year": 2019,
+      "code": 5,
+      "category": "Soybeans",
+      "cropId": "soybean"
+    },
+    {
+      "year": 2020,
+      "code": 1,
+      "category": "Corn",
+      "cropId": "corn"
+    },
+    {
+      "year": 2021,
+      "code": 5,
+      "category": "Soybeans",
+      "cropId": "soybean"
+    },
+    {
+      "year": 2022,
+      "code": 1,
+      "category": "Corn",
+      "cropId": "corn"
+    },
+    {
+      "year": 2023,
+      "code": 176,
+      "category": "Grass/Pasture",
+      "cropId": null
+    },
+    {
+      "year": 2024,
+      "code": 176,
+      "category": "Grass/Pasture",
+      "cropId": null
+    },
+    {
+      "year": 2025,
+      "code": 176,
+      "category": "Grass/Pasture",
+      "cropId": null
+    }
+  ],
+  "cropSuitability": [
+    {
+      "cropId": "sunflower",
+      "name": "Sunflower",
+      "family": "Asteraceae",
+      "role": "cash",
+      "suitability": 99,
+      "class": "good",
+      "seasonFitProbability": 1,
+      "frostKillProbability": 0,
+      "sowingRule": "after_frost",
+      "plantingDate": "04-27",
+      "harvestDate": "08-30",
+      "seasonDays": 111,
+      "maturityGdd": 1650,
+      "maturityClass": "full",
+      "floweringStressDays": 0,
+      "heatStressDays": 0.5,
+      "waterUseMm": 363,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 65
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "oats_cover",
+      "name": "Oats (winter-killed cover)",
+      "family": "Poaceae",
+      "role": "cover",
+      "suitability": 96,
+      "class": "good",
+      "seasonFitProbability": 1,
+      "frostKillProbability": 0,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "10-11",
+      "seasonDays": 24,
+      "maturityGdd": 400,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 2,
+      "waterUseMm": 40,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 6
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "radish",
+      "name": "Forage radish (cover)",
+      "family": "Brassicaceae",
+      "role": "cover",
+      "suitability": 96,
+      "class": "good",
+      "seasonFitProbability": 1,
+      "frostKillProbability": 0,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "10-07",
+      "seasonDays": 20,
+      "maturityGdd": 350,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 2,
+      "waterUseMm": 36,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 2
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "alfalfa",
+      "name": "Alfalfa",
+      "family": "Fabaceae",
+      "role": "forage",
+      "suitability": 95,
+      "class": "good",
+      "seasonFitProbability": 1,
+      "frostKillProbability": 0,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "04-03",
+      "harvestDate": "07-29",
+      "seasonDays": 117,
+      "maturityGdd": 1600,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 0,
+      "waterUseMm": 449,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 94
+      },
+      "phFit": false,
+      "limitingFactors": [
+        "soil pH 6.4 outside 6.5-7.8"
+      ]
+    },
+    {
+      "cropId": "cereal_rye",
+      "name": "Cereal rye (cover)",
+      "family": "Poaceae",
+      "role": "cover",
+      "suitability": 95,
+      "class": "good",
+      "seasonFitProbability": 0.95,
+      "frostKillProbability": 0.05,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "10-11",
+      "seasonDays": 24,
+      "maturityGdd": 400,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 0,
+      "waterUseMm": 40,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 0
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "sorghum",
+      "name": "Grain sorghum",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 90,
+      "class": "good",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "05-08",
+      "harvestDate": "10-05",
+      "seasonDays": 136,
+      "maturityGdd": 1550,
+      "maturityClass": "full",
+      "floweringStressDays": 0,
+      "heatStressDays": 0,
+      "waterUseMm": 453,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 88
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "corn",
+      "name": "Corn (maize)",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 84,
+      "class": "good",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "after_frost",
+      "plantingDate": "04-27",
+      "harvestDate": "10-04",
+      "seasonDays": 146,
+      "maturityGdd": 1600,
+      "maturityClass": "full",
+      "floweringStressDays": 0,
+      "heatStressDays": 2,
+      "waterUseMm": 536,
+      "irrigationNeedMm": {
+        "median": 24,
+        "p90": 189
+      },
+      "phFit": true,
+      "limitingFactors": []
+    },
+    {
+      "cropId": "barley",
+      "name": "Spring barley",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 80,
+      "class": "good",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "03-15",
+      "harvestDate": "06-30",
+      "seasonDays": 93,
+      "maturityGdd": 1300,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 5.5,
+      "waterUseMm": 230,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 15
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "6 days above 30 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "soybean",
+      "name": "Soybean",
+      "family": "Fabaceae",
+      "role": "cash",
+      "suitability": 79,
+      "class": "good",
+      "seasonFitProbability": 0.85,
+      "frostKillProbability": 0.15,
+      "sowingRule": "after_frost",
+      "plantingDate": "04-27",
+      "harvestDate": "10-07",
+      "seasonDays": 149,
+      "maturityGdd": 1650,
+      "maturityClass": "full",
+      "floweringStressDays": 0,
+      "heatStressDays": 2,
+      "waterUseMm": 519,
+      "irrigationNeedMm": {
+        "median": 23,
+        "p90": 177
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 15% of years"
+      ]
+    },
+    {
+      "cropId": "oats",
+      "name": "Oats",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 79,
+      "class": "good",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "03-15",
+      "harvestDate": "07-02",
+      "seasonDays": 95,
+      "maturityGdd": 1350,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 6,
+      "waterUseMm": 238,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 17
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "6 days above 30 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "dry_bean",
+      "name": "Dry bean",
+      "family": "Fabaceae",
+      "role": "cash",
+      "suitability": 77,
+      "class": "good",
+      "seasonFitProbability": 1,
+      "frostKillProbability": 0,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "05-08",
+      "harvestDate": "08-16",
+      "seasonDays": 86,
+      "maturityGdd": 1000,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 9.5,
+      "waterUseMm": 315,
+      "irrigationNeedMm": {
+        "median": 15,
+        "p90": 115
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "10 days above 32 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "hairy_vetch",
+      "name": "Hairy vetch (cover)",
+      "family": "Fabaceae",
+      "role": "cover",
+      "suitability": 76,
+      "class": "good",
+      "seasonFitProbability": 0.79,
+      "frostKillProbability": 0.21,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "10-28",
+      "seasonDays": 41,
+      "maturityGdd": 600,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 2,
+      "waterUseMm": 63,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 12
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 21% of years"
+      ]
+    },
+    {
+      "cropId": "winter_wheat",
+      "name": "Winter wheat",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 73,
+      "class": "good",
+      "seasonFitProbability": 0.79,
+      "frostKillProbability": 0.21,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "07-09",
+      "seasonDays": 281,
+      "maturityGdd": 2500,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 4,
+      "waterUseMm": 429,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 28
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 21% of years"
+      ]
+    },
+    {
+      "cropId": "canola",
+      "name": "Spring canola",
+      "family": "Brassicaceae",
+      "role": "cash",
+      "suitability": 71,
+      "class": "good",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "03-15",
+      "harvestDate": "07-11",
+      "seasonDays": 104,
+      "maturityGdd": 1100,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 10.5,
+      "waterUseMm": 293,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 57
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "11 days above 30 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "field_pea",
+      "name": "Field pea",
+      "family": "Fabaceae",
+      "role": "cash",
+      "suitability": 68,
+      "class": "marginal",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "03-15",
+      "harvestDate": "06-29",
+      "seasonDays": 92,
+      "maturityGdd": 950,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 12.5,
+      "waterUseMm": 227,
+      "irrigationNeedMm": {
+        "median": 0,
+        "p90": 14
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "13 days above 28 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "potato",
+      "name": "Potato",
+      "family": "Solanaceae",
+      "role": "cash",
+      "suitability": 57,
+      "class": "marginal",
+      "seasonFitProbability": 0.9,
+      "frostKillProbability": 0.1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "04-15",
+      "harvestDate": "07-29",
+      "seasonDays": 91,
+      "maturityGdd": 1100,
+      "maturityClass": "fixed",
+      "floweringStressDays": 0,
+      "heatStressDays": 17,
+      "waterUseMm": 318,
+      "irrigationNeedMm": {
+        "median": 14,
+        "p90": 152
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "17 days above 30 degC in a typical season"
+      ]
+    },
+    {
+      "cropId": "crimson_clover",
+      "name": "Crimson clover (cover)",
+      "family": "Fabaceae",
+      "role": "cover",
+      "suitability": 4,
+      "class": "poor",
+      "seasonFitProbability": 0.05,
+      "frostKillProbability": 0.95,
+      "sowingRule": "fall",
+      "plantingDate": "09-17",
+      "harvestDate": "10-27",
+      "seasonDays": 40,
+      "maturityGdd": 600,
+      "maturityClass": "fixed",
+      "floweringStressDays": 4,
+      "heatStressDays": 2,
+      "waterUseMm": 74,
+      "irrigationNeedMm": {
+        "median": 13,
+        "p90": 13
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 95% of years",
+        "18% of crop water demand unmet without (more) irrigation",
+        "4 dry-stress days around flowering in a typical season"
+      ]
+    },
+    {
+      "cropId": "cotton",
+      "name": "Cotton",
+      "family": "Malvaceae",
+      "role": "cash",
+      "suitability": 0,
+      "class": "poor",
+      "seasonFitProbability": 0,
+      "frostKillProbability": 1,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "05-22",
+      "harvestDate": null,
+      "seasonDays": null,
+      "maturityGdd": 1450,
+      "maturityClass": "full",
+      "floweringStressDays": 0,
+      "heatStressDays": 0,
+      "waterUseMm": 499,
+      "irrigationNeedMm": {
+        "median": 2,
+        "p90": 170
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 100% of years"
+      ]
+    }
+  ],
+  "pestCalendar": [
+    {
+      "pestId": "corn_rootworm_hatch",
+      "pest": "Corn rootworm",
+      "crops": [
+        "corn"
+      ],
+      "event": "larvae begin hatching (684 degF-days base 52 degF)",
+      "date": "06-03",
+      "earliest": "05-29",
+      "latest": "06-12",
+      "action": "Dig and check roots of corn planted after corn about 2 weeks after this date"
+    },
+    {
+      "pestId": "european_corn_borer_1",
+      "pest": "European corn borer",
+      "crops": [
+        "corn"
+      ],
+      "event": "first moth flight (374 degF-days base 50 degF)",
+      "date": "05-07",
+      "earliest": "04-28",
+      "latest": "05-17",
+      "action": "Scout leaves for shot-hole feeding about 1-2 weeks after this date"
+    },
+    {
+      "pestId": "european_corn_borer_2",
+      "pest": "European corn borer",
+      "crops": [
+        "corn"
+      ],
+      "event": "second moth flight (1400 degF-days base 50 degF)",
+      "date": "06-30",
+      "earliest": "06-26",
+      "latest": "07-10",
+      "action": "Scout for egg masses on the underside of leaves"
+    },
+    {
+      "pestId": "western_bean_cutworm",
+      "pest": "Western bean cutworm",
+      "crops": [
+        "corn"
+      ],
+      "event": "25% moth flight (1319 degF-days base 50 degF from May 1)",
+      "date": "07-11",
+      "earliest": "07-05",
+      "latest": "07-16",
+      "action": "Check 20 plants in 5 spots for egg masses each week"
+    }
+  ],
+  "hazards": [
+    {
+      "id": "heavy_rain",
+      "category": "water",
+      "title": "Extreme rainfall and waterlogging",
+      "severity": "high",
+      "likelihood": null,
+      "months": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "metrics": {
+        "heavyRainDaysPerYear": 5.2,
+        "max5DayPrecipMm": 76,
+        "wetDayP95Mm": 24.5,
+        "trendDaysPerDecade": -0.902,
+        "clayPct": 31,
+        "drainageClass": "Poorly drained",
+        "hydrologicGroup": "C/D",
+        "lowSpotSharePct": 0
+      },
+      "affectedCrops": [
+        {
+          "cropId": "soybean",
+          "impact": "sensitive to waterlogging and root diseases in saturated soil"
+        },
+        {
+          "cropId": "sunflower",
+          "impact": "sensitive to waterlogging and root diseases in saturated soil"
+        }
+      ],
+      "mitigation": [
+        "Check field drainage before wet months",
+        "Avoid working wet soil (compaction)",
+        "Prefer waterlogging-tolerant crops on low spots"
+      ],
+      "sources": [
+        "nasa_power",
+        "soil",
+        "srtm"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": [
+        "standing water in low spots every spring"
+      ]
+    },
+    {
+      "id": "frost",
+      "category": "climate",
+      "title": "Killing frost during the growing season",
+      "severity": "moderate",
+      "likelihood": 0.15,
+      "months": [
+        4,
+        10
+      ],
+      "metrics": {
+        "lastSpringFrostMedian": "04-19",
+        "lastSpringFrost90": "04-29",
+        "firstFallFrostMedian": "10-22",
+        "firstFallFrost10": "10-10",
+        "frostFreeDaysMedian": 183
+      },
+      "affectedCrops": [
+        {
+          "cropId": "corn",
+          "impact": "killing frost (<= -2 degC) before maturity in 10% of years"
+        },
+        {
+          "cropId": "soybean",
+          "impact": "killing frost (<= -1 degC) before maturity in 15% of years"
+        }
+      ],
+      "mitigation": [
+        "Plant frost-sensitive crops after the 90% last-frost date",
+        "Choose shorter-season varieties",
+        "Watch 7-day forecasts around planting and harvest"
+      ],
+      "sources": [
+        "nasa_power"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": []
+    },
+    {
+      "id": "erosion",
+      "category": "soil",
+      "title": "Soil erosion by water",
+      "severity": "moderate",
+      "likelihood": null,
+      "months": [
+        5,
+        6,
+        8
+      ],
+      "metrics": {
+        "estimatedSoilLossTHaYr": 9.4,
+        "tolerableLossTHaYr": 11.2,
+        "slopePct": 4.9,
+        "erodibilityK": 0.0164,
+        "rainfallErosivity": 2576,
+        "soilCoverFraction": 0.45
+      },
+      "affectedCrops": [
+        {
+          "cropId": "corn",
+          "impact": "soil left bare after harvest until the next planting"
+        },
+        {
+          "cropId": "soybean",
+          "impact": "soil left bare after harvest until the next planting"
+        }
+      ],
+      "mitigation": [
+        "Plant a cover crop after harvest",
+        "Reduce tillage and keep residue",
+        "Contour farming or grassed waterways on steeper zones"
+      ],
+      "sources": [
+        "nasa_power",
+        "soilgrids",
+        "srtm",
+        "modis_ndvi"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": []
+    },
+    {
+      "id": "pest_cycle",
+      "category": "biotic",
+      "title": "Pest and disease build-up from a narrow rotation",
+      "severity": "moderate",
+      "likelihood": null,
+      "months": [],
+      "metrics": {
+        "distinctFamilies": 2,
+        "rotationLengthYears": 2
+      },
+      "affectedCrops": [
+        {
+          "cropId": "corn",
+          "impact": "pests adapted to short rotations: corn rootworm, European corn borer"
+        },
+        {
+          "cropId": "soybean",
+          "impact": "pests adapted to short rotations: soybean cyst nematode, soybean aphid"
+        }
+      ],
+      "mitigation": [
+        "Add a crop from a third plant family",
+        "Use a cover crop from a different family"
+      ],
+      "sources": [
+        "farmer"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": [
+        "corn rootworm pressure increasing"
+      ]
+    },
+    {
+      "id": "heat",
+      "category": "climate",
+      "title": "Heat stress during crop development",
+      "severity": "low",
+      "likelihood": null,
+      "months": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "metrics": {
+        "extremeHeatDaysPerYear": 5.7,
+        "trendDaysPerDecade": 0.647
+      },
+      "affectedCrops": [],
+      "mitigation": [
+        "Shift planting so flowering avoids the hottest weeks",
+        "Use heat-tolerant hybrids/varieties",
+        "Keep residue to lower soil temperature"
+      ],
+      "sources": [
+        "nasa_power"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": []
+    },
+    {
+      "id": "drought",
+      "category": "water",
+      "title": "Growing-season water deficit",
+      "severity": "low",
+      "likelihood": null,
+      "months": [
+        7
+      ],
+      "metrics": {
+        "aprSepWaterBalanceMm": -122,
+        "longestDrySpellDays": 13,
+        "aridityIndex": 0.92,
+        "recentYearRootZoneWetnessZ": -0.37,
+        "irrigation": "none"
+      },
+      "affectedCrops": [],
+      "mitigation": [
+        "Favour drought-tolerant crops in the driest slot",
+        "Keep residue / no-till to conserve soil water",
+        "Schedule irrigation by soil moisture, not calendar"
+      ],
+      "sources": [
+        "nasa_power"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": []
+    },
+    {
+      "id": "disease",
+      "category": "biotic",
+      "title": "Disease pressure from warm, humid weather",
+      "severity": "low",
+      "likelihood": null,
+      "months": [
+        6,
+        7,
+        8
+      ],
+      "metrics": {
+        "humidWarmDaysMaySep": 19
+      },
+      "affectedCrops": [
+        {
+          "cropId": "corn",
+          "impact": "gray leaf spot, northern corn leaf blight"
+        },
+        {
+          "cropId": "soybean",
+          "impact": "white mold, sudden death syndrome"
+        },
+        {
+          "cropId": "sunflower",
+          "impact": "Sclerotinia white mold"
+        }
+      ],
+      "mitigation": [
+        "Rotate away from the same family for 2+ years",
+        "Choose resistant varieties",
+        "Scout after humid spells"
+      ],
+      "sources": [
+        "nasa_power"
+      ],
+      "upcoming": false,
+      "corroboratedByFarmer": []
+    }
+  ],
+  "rotations": [
+    {
+      "id": "current",
+      "name": "Current rotation",
+      "isCurrent": true,
+      "sequence": [
+        {
+          "year": 1,
+          "crop": "corn",
+          "cover": null,
+          "plantDate": "04-27",
+          "harvestDate": "10-04"
+        },
+        {
+          "year": 2,
+          "crop": "soybean",
+          "cover": null,
+          "plantDate": "04-27",
+          "harvestDate": "10-07"
+        }
+      ],
+      "scores": {
+        "soilHealth": 51,
+        "water": 94,
+        "resilience": 82,
+        "pest": 67,
+        "erosion": 58,
+        "overall": 67
+      },
+      "metrics": {
+        "soilCoverFraction": 0.45,
+        "estimatedSoilLossTHaYr": 9.4,
+        "irrigationNeedMmYr": 23,
+        "legumeShare": 0.5,
+        "distinctFamilies": 2,
+        "meanSeasonFitProbability": 0.88
+      },
+      "programs": [],
+      "rationale": "The rotation you farm today (Corn (maize) -> Soybean), scored as the baseline.",
+      "evidence": [
+        "Soil is covered 45% of the year; 30% of rainfall erosivity falls on bare soil (NASA POWER rainfall).",
+        "Corn (maize): reached maturity in 90% of 2006-2025 seasons; needs ~24 mm beyond effective rainfall in a median year.",
+        "Soybean: reached maturity in 85% of 2006-2025 seasons; needs ~23 mm beyond effective rainfall in a median year."
+      ],
+      "benefits": [
+        "Known system: no new equipment, seed sources or markets needed."
+      ],
+      "risks": [
+        "Extreme rainfall and waterlogging (high): Soybean: sensitive to waterlogging and root diseases in saturated soil.",
+        "Killing frost during the growing season (moderate): Corn (maize): killing frost (<= -2 degC) before maturity in 10% of years; Soybean: killing frost (<= -1 degC) before maturity in 15% of years.",
+        "Soil erosion by water (moderate): Corn (maize): soil left bare after harvest until the next planting; Soybean: soil left bare after harvest until the next planting.",
+        "Pest and disease build-up from a narrow rotation (moderate): Corn (maize): pests adapted to short rotations: corn rootworm, European corn borer; Soybean: pests adapted to short rotations: soybean cyst nematode, soybean aphid."
+      ],
+      "informationGaps": [
+        "Variety length is fitted to the local season; other crop parameters are generic and benefit from local variety data.",
+        "Market prices and demand are not scored here; they are added by the marketing pipeline.",
+        "MODIS NDVI missing or incomplete: bare-soil periods and recent crop stress rely partly on crop calendars."
+      ]
+    },
+    {
+      "id": "cover",
+      "name": "Current rotation + cover crops",
+      "isCurrent": false,
+      "sequence": [
+        {
+          "year": 1,
+          "crop": "corn",
+          "cover": "cereal_rye",
+          "plantDate": "04-27",
+          "harvestDate": "10-04"
+        },
+        {
+          "year": 2,
+          "crop": "soybean",
+          "cover": "cereal_rye",
+          "plantDate": "04-27",
+          "harvestDate": "10-07"
+        }
+      ],
+      "scores": {
+        "soilHealth": 86,
+        "water": 94,
+        "resilience": 82,
+        "pest": 67,
+        "erosion": 74,
+        "overall": 79
+      },
+      "metrics": {
+        "soilCoverFraction": 0.96,
+        "estimatedSoilLossTHaYr": 5.9,
+        "irrigationNeedMmYr": 23,
+        "legumeShare": 0.5,
+        "distinctFamilies": 2,
+        "meanSeasonFitProbability": 0.88
+      },
+      "programs": [
+        "NRCS EQIP/CSP practice 340: Cover Crop"
+      ],
+      "rationale": "Keeps your cash crops and fills bare gaps with cover crops. Today 30% of annual rainfall erosivity lands on bare soil.",
+      "evidence": [
+        "Soil is covered 96% of the year; 5% of rainfall erosivity falls on bare soil (NASA POWER rainfall).",
+        "Corn (maize): reached maturity in 90% of 2006-2025 seasons; needs ~24 mm beyond effective rainfall in a median year.",
+        "Soybean: reached maturity in 85% of 2006-2025 seasons; needs ~23 mm beyond effective rainfall in a median year."
+      ],
+      "benefits": [
+        "Soil health +35 vs current (51 -> 86).",
+        "Erosion protection +16 vs current (58 -> 74).",
+        "Estimated soil loss 9.4 -> 5.9 t/ha/yr."
+      ],
+      "risks": [
+        "Overwintering covers must be terminated on time (~2 weeks before planting) to avoid yield drag.",
+        "Extreme rainfall and waterlogging (high): Soybean: sensitive to waterlogging and root diseases in saturated soil.",
+        "Killing frost during the growing season (moderate): Corn (maize): killing frost (<= -2 degC) before maturity in 10% of years; Soybean: killing frost (<= -1 degC) before maturity in 15% of years.",
+        "Soil erosion by water (moderate): Corn (maize): soil left bare after harvest until the next planting; Soybean: soil left bare after harvest until the next planting.",
+        "Pest and disease build-up from a narrow rotation (moderate): Corn (maize): pests adapted to short rotations: corn rootworm, European corn borer; Soybean: pests adapted to short rotations: soybean cyst nematode, soybean aphid."
+      ],
+      "informationGaps": [
+        "Variety length is fitted to the local season; other crop parameters are generic and benefit from local variety data.",
+        "Market prices and demand are not scored here; they are added by the marketing pipeline.",
+        "MODIS NDVI missing or incomplete: bare-soil periods and recent crop stress rely partly on crop calendars."
+      ]
+    },
+    {
+      "id": "diversified",
+      "name": "Diversified with Sunflower",
+      "isCurrent": false,
+      "sequence": [
+        {
+          "year": 1,
+          "crop": "corn",
+          "cover": "cereal_rye",
+          "plantDate": "04-27",
+          "harvestDate": "10-04"
+        },
+        {
+          "year": 2,
+          "crop": "sunflower",
+          "cover": "cereal_rye",
+          "plantDate": "04-27",
+          "harvestDate": "08-30"
+        },
+        {
+          "year": 3,
+          "crop": "soybean",
+          "cover": "cereal_rye",
+          "plantDate": "04-27",
+          "harvestDate": "10-07"
+        }
+      ],
+      "scores": {
+        "soilHealth": 82,
+        "water": 96,
+        "resilience": 88,
+        "pest": 100,
+        "erosion": 75,
+        "overall": 87
+      },
+      "metrics": {
+        "soilCoverFraction": 0.96,
+        "estimatedSoilLossTHaYr": 5.7,
+        "irrigationNeedMmYr": 16,
+        "legumeShare": 0.33,
+        "distinctFamilies": 3,
+        "meanSeasonFitProbability": 0.92
+      },
+      "programs": [
+        "NRCS EQIP/CSP practice 340: Cover Crop",
+        "NRCS EQIP/CSP practice 328: Conservation Crop Rotation"
+      ],
+      "rationale": "Adds Sunflower (Asteraceae), a plant family not in your rotation, to interrupt pest and disease cycles (sunflower moth, stem weevil). It is suitable here (99/100).",
+      "evidence": [
+        "Soil is covered 96% of the year; 5% of rainfall erosivity falls on bare soil (NASA POWER rainfall).",
+        "Corn (maize): reached maturity in 90% of 2006-2025 seasons; needs ~24 mm beyond effective rainfall in a median year.",
+        "Sunflower: reached maturity in 100% of 2006-2025 seasons; needs ~0 mm beyond effective rainfall in a median year.",
+        "Soybean: reached maturity in 85% of 2006-2025 seasons; needs ~23 mm beyond effective rainfall in a median year."
+      ],
+      "benefits": [
+        "Soil health +31 vs current (51 -> 82).",
+        "Climate resilience +6 vs current (82 -> 88).",
+        "Pest-cycle disruption +33 vs current (67 -> 100).",
+        "Erosion protection +17 vs current (58 -> 75).",
+        "Estimated soil loss 9.4 -> 5.7 t/ha/yr."
+      ],
+      "risks": [
+        "New crop(s) Sunflower: check equipment, seed, storage and local buyers before committing.",
+        "Overwintering covers must be terminated on time (~2 weeks before planting) to avoid yield drag.",
+        "Extreme rainfall and waterlogging (high): Soybean: sensitive to waterlogging and root diseases in saturated soil; Sunflower: sensitive to waterlogging and root diseases in saturated soil.",
+        "Killing frost during the growing season (moderate): Corn (maize): killing frost (<= -2 degC) before maturity in 10% of years; Soybean: killing frost (<= -1 degC) before maturity in 15% of years.",
+        "Soil erosion by water (moderate): Corn (maize): soil left bare after harvest until the next planting; Soybean: soil left bare after harvest until the next planting.",
+        "Pest and disease build-up from a narrow rotation (moderate): Corn (maize): pests adapted to short rotations: corn rootworm, European corn borer; Soybean: pests adapted to short rotations: soybean cyst nematode, soybean aphid."
+      ],
+      "informationGaps": [
+        "Variety length is fitted to the local season; other crop parameters are generic and benefit from local variety data.",
+        "Market prices and demand are not scored here; they are added by the marketing pipeline.",
+        "MODIS NDVI missing or incomplete: bare-soil periods and recent crop stress rely partly on crop calendars."
+      ]
+    }
+  ],
+  "recommendation": {
+    "rotationId": "diversified",
+    "summary": "Diversified with Sunflower scores 87/100 vs 67/100 for your current rotation. Soil health +31 vs current (51 -> 82).",
+    "stability": {
+      "runs": 8,
+      "agreement": 1
+    }
+  },
+  "market": {
+    "basis": "IMF world benchmark price (via DBnomics), adjusted with US CPI to 2025-01 US dollars",
+    "dataUpdated": "2026-11-14T21:51:14.927Z",
+    "pricesThrough": "2025-06",
+    "dollarsOf": "2025-01",
+    "crops": [
+      {
+        "cropId": "corn",
+        "harvestMonth": 10,
+        "price": {
+          "basis": "IMF world benchmark price (via DBnomics), adjusted with US CPI",
+          "usdPerTonne": {
+            "p10": 191,
+            "p50": 217,
+            "p90": 284
+          },
+          "usdPerBushel": {
+            "p10": 4.86,
+            "p50": 5.52,
+            "p90": 7.22
+          },
+          "yearsUsed": 10
+        },
+        "backtest": {
+          "years": 5,
+          "coverage": 0.6,
+          "mapePct": 15.9,
+          "naiveMapePct": 26.3
+        },
+        "bestSellMonth": {
+          "month": 6,
+          "usdPerTonneP50": 230,
+          "premiumPct": 5.7
+        },
+        "demand": {
+          "marketYear": 2026,
+          "stocksToUse": 0.108,
+          "stocksVsUsual": "normal",
+          "exportsTrend": "rising"
+        },
+        "yieldTHa": 11.26,
+        "grossRevenuePerHa": {
+          "p10": 1940,
+          "p50": 2201,
+          "p90": 2881
+        },
+        "marketScore": 87
+      },
+      {
+        "cropId": "soybean",
+        "harvestMonth": 10,
+        "price": {
+          "basis": "IMF world benchmark price (via DBnomics), adjusted with US CPI",
+          "usdPerTonne": {
+            "p10": 394,
+            "p50": 466,
+            "p90": 521
+          },
+          "usdPerBushel": {
+            "p10": 10.73,
+            "p50": 12.69,
+            "p90": 14.19
+          },
+          "yearsUsed": 10
+        },
+        "backtest": {
+          "years": 5,
+          "coverage": 0.8,
+          "mapePct": 10.5,
+          "naiveMapePct": 13.3
+        },
+        "bestSellMonth": {
+          "month": 7,
+          "usdPerTonneP50": 485,
+          "premiumPct": 4
+        },
+        "demand": {
+          "marketYear": 2026,
+          "stocksToUse": 0.065,
+          "stocksVsUsual": "normal",
+          "exportsTrend": "falling"
+        },
+        "yieldTHa": 3.41,
+        "grossRevenuePerHa": {
+          "p10": 1143,
+          "p50": 1351,
+          "p90": 1511
+        },
+        "marketScore": 56
+      },
+      {
+        "cropId": "winter_wheat",
+        "harvestMonth": 7,
+        "price": {
+          "basis": "IMF world benchmark price (via DBnomics), adjusted with US CPI",
+          "usdPerTonne": {
+            "p10": 184,
+            "p50": 237,
+            "p90": 295
+          },
+          "usdPerBushel": {
+            "p10": 5.01,
+            "p50": 6.46,
+            "p90": 8.03
+          },
+          "yearsUsed": 10
+        },
+        "backtest": {
+          "years": 5,
+          "coverage": 0.8,
+          "mapePct": 22.4,
+          "naiveMapePct": 24.6
+        },
+        "bestSellMonth": {
+          "month": 7,
+          "usdPerTonneP50": 237,
+          "premiumPct": 0
+        },
+        "demand": {
+          "marketYear": 2026,
+          "stocksToUse": 0.4,
+          "stocksVsUsual": "normal",
+          "exportsTrend": "falling"
+        },
+        "yieldTHa": 3.27,
+        "grossRevenuePerHa": {
+          "p10": 476,
+          "p50": 613,
+          "p90": 762
+        },
+        "marketScore": 24
+      }
+    ],
+    "ranking": [
+      {
+        "cropId": "corn",
+        "agronomic": 84,
+        "market": 87,
+        "final": 85
+      },
+      {
+        "cropId": "soybean",
+        "agronomic": 79,
+        "market": 56,
+        "final": 70
+      },
+      {
+        "cropId": "winter_wheat",
+        "agronomic": 73,
+        "market": 24,
+        "final": 53
+      }
+    ],
+    "rotationRanking": [
+      {
+        "rotationId": "cover",
+        "agronomic": 79,
+        "market": 100,
+        "final": 87
+      },
+      {
+        "rotationId": "current",
+        "agronomic": 67,
+        "market": 100,
+        "final": 80
+      },
+      {
+        "rotationId": "diversified",
+        "agronomic": 87,
+        "market": null,
+        "final": null
+      }
+    ],
+    "incomeWeight": 0.4,
+    "notes": [
+      "Price history through 2025-06, in 2025-01 US dollars.",
+      "Prices are world benchmark prices; prices at your local buyer differ by transport, quality and season (basis).",
+      "Revenue is before costs, using the US national yield and this field's season-fit probability.",
+      "No market data yet for: Sunflower, Alfalfa, Grain sorghum, Spring barley, Oats, Dry bean, Spring canola, Field pea, Potato."
+    ]
+  },
+  "confidence": {
+    "level": "medium",
+    "reasons": [
+      "Climate statistics use 20 years of daily NASA POWER data.",
+      "MODIS MOD13Q1 v061 NDVI unavailable (timed out; the fetch finishes in the background and is cached).",
+      "Recommendation unchanged in 100% of robustness runs."
+    ]
+  },
+  "disclaimer": "Decision support only. Results come from satellite, reanalysis and survey data and generic crop parameters; they highlight patterns and options but do not replace farmer judgment, a soil test or local agronomic advice."
+}

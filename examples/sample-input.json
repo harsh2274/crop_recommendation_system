@@ -1,0 +1,86 @@
+{
+  "type": "Feature",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32615"
+    }
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          437584,
+          4660751
+        ],
+        [
+          438384,
+          4660751
+        ],
+        [
+          438384,
+          4661551
+        ],
+        [
+          437584,
+          4661551
+        ],
+        [
+          437584,
+          4660751
+        ]
+      ]
+    ]
+  },
+  "properties": {
+    "fieldId": "demo-iowa-001",
+    "farmer": {
+      "id": "farmer-42",
+      "name": "Demo Farmer",
+      "region": "Boone County, IA",
+      "experienceYears": 25
+    },
+    "currentRotation": [
+      {
+        "crop": "corn"
+      },
+      {
+        "crop": "soybean"
+      }
+    ],
+    "currentSeason": {
+      "crop": "corn",
+      "plantingDate": "2026-05-02",
+      "growthStage": "harvested",
+      "schedule": [
+        {
+          "task": "harvest",
+          "date": "2026-10-15"
+        }
+      ]
+    },
+    "observedIssues": [
+      "standing water in low spots every spring",
+      "corn rootworm pressure increasing"
+    ],
+    "priorities": {
+      "soilHealth": 5,
+      "water": 2,
+      "resilience": 4,
+      "pest": 4,
+      "erosion": 4,
+      "income": 4
+    },
+    "constraints": {
+      "irrigation": "none",
+      "excludeCrops": [
+        "potato"
+      ]
+    },
+    "soilTest": {
+      "ph": 6.4,
+      "organicMatterPct": 3.8
+    }
+  }
+}

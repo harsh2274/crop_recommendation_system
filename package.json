@@ -1,0 +1,25 @@
+{
+  "name": "crop-recommendation-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker: field polygon + farmer context + NASA Earth data -> climate/soil/vegetation metrics, hazards and crop-rotation strategies",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "tail": "wrangler tail",
+    "db:migrate": "wrangler d1 migrations apply farm-market --remote"
+  },
+  "dependencies": {
+    "agents": "^0.33.0",
+    "proj4": "^2.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261114.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.162.0"
+  }
+}

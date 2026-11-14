@@ -1,0 +1,16 @@
+# Local secrets for `npx wrangler dev`. Copy to `.dev.vars` (gitignored) and fill in what you need.
+# In production these are Worker secrets: npx wrangler secret put <NAME>
+
+# Twilio (account that owns the service number farmers text)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
+
+# Optional: SRTM slope and low spots (free key from opentopography.org)
+OPENTOPO_API_KEY=
+
+# Protects POST /admin/ingest (any long random string)
+ADMIN_TOKEN=
+
+# Local testing only: accept /sms without a Twilio signature (never set in production)
+ALLOW_UNSIGNED_SMS=true

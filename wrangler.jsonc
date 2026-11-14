@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "farm-rotation-pipeline",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  // Cloudflare account this deploys to (not a secret). Deploying your own copy: change it and the resource ids below.
+  "account_id": "efa0bc7edb4eb6d26e2e7025bac22b60",
+  // KV caches upstream NASA/soil responses per location (they change at most daily).
+  "kv_namespaces": [{ "binding": "CACHE", "id": "b16730ccbc4d4c2bb0e62d548f686aa0" }],
+  // D1 holds market data (prices, CPI, USDA supply/demand), written by the monthly ingestion.
+  // Schema: migrations/0001_market.sql (npx wrangler d1 migrations apply farm-market --remote)
+  "d1_databases": [{ "binding": "DB", "database_name": "farm-market", "database_id": "3df908ab-bc51-4805-847a-efd00d85c196", "migrations_dir": "migrations" }],
+  // Monthly market ingestion (15th, 06:00 UTC: after the IMF price update and the USDA WASDE release).
+  "triggers": { "crons": ["0 6 15 * *"] },
+  // Workers AI: reads farmer messages into fields and translates code-written texts (runs on Cloudflare even in dev).
+  "ai": { "binding": "AI" },
+  // One Agent (Agents SDK = Durable Object) per farmer phone number: profile, conversation, queued work.
+  "durable_objects": { "bindings": [{ "name": "FARMER", "class_name": "FarmerSession" }] },
+  // Service binding to this same Worker: the farmer agent calls /analyze through it, so the analysis's ~24 data
+  // downloads use their own connections instead of blocking the agent's replies.
+  "services": [{ "binding": "SELF", "service": "farm-rotation-pipeline" }],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FarmerSession"] }],
+  "observability": { "enabled": true }
+  // Secrets (never in this file): npx wrangler secret put <NAME>
+  //   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, OPENTOPO_API_KEY, ADMIN_TOKEN
+}
