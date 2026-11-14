@@ -55,6 +55,7 @@ src/
     mappage.ts        Boundary-drawing page (Leaflet + Esri imagery), translatable texts
     twilio.ts         Signature verification, outbound SMS
 test/                 geo-input · pipeline (stubbed APIs) · methods (Penman-Monteith, rotation inference) · sms · sms-flow (translation guard, facts, flow)
+public/               demo page served as static assets: index.html, style.css, app.js (draw a field, stream /analyze)
 examples/             sample-input.json (Iowa field, UTM 15N) and its live sample-output.json
 ```
 Dependency direction: `index → {pipeline, sms} → analysis modules → sources`. There are no cycles.

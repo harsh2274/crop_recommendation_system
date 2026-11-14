@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "farm-rotation-pipeline",
   "main": "src/index.ts",
+  // Public demo page (public/index.html, app.js, style.css) served as static assets; API routes fall through to the Worker.
+  "assets": { "directory": "./public" },
   "compatibility_date": "2026-11-01",
   // Cloudflare account this deploys to (not a secret). Deploying your own copy: change it and the resource ids below.
   "account_id": "efa0bc7edb4eb6d26e2e7025bac22b60",

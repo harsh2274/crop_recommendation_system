@@ -14,7 +14,8 @@ Farmers text a phone number in their own language. The assistant asks a few simp
 ## Live deployment
 | What | Where |
 |---|---|
-| Backend (Cloudflare Worker) | `https://farm-rotation-pipeline.rshaspaceapps.workers.dev` |
+| Public demo page | `https://farm-rotation-pipeline.rshaspaceapps.workers.dev` (draw a field, watch the analysis stream in) |
+| Backend (Cloudflare Worker) | same address; API description at `/api` |
 | Analysis API | `POST /analyze` (streams results) · `POST /analyze?format=json` (one JSON result) |
 | SMS webhook (Twilio) | `POST /sms` (only accepts Twilio-signed requests) |
 | Farm-drawing page | `/map/<farmer>/<token>`, sent to the farmer by text |
@@ -96,6 +97,7 @@ src/
 migrations/         D1 schema
 test/               offline tests (npm test)
 examples/           sample input and its live output
+public/             demo page (index.html, app.js, style.css), served as Cloudflare static assets
 ```
 
 ## Getting access (for teammates)

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farm Helper: crop rotation advice from NASA data</title>
+<meta name="description" content="Live demo: a farmer's field + NASA and USDA data -> crop fit, rotation plans, hazards and market prices, delivered by SMS.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">NASA Space Apps 2026 · Adapting Farms with NASA Data</p>
+    <h1>Farm Helper</h1>
+    <p class="lead">A farmer texts a phone number, marks their field on a map, and gets crop and rotation advice built from 20 years of NASA and USDA data. It works in their own language, with no app to install and no invented facts.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#try">Try it on a field</a>
+      <a class="btn ghost" href="#sms">See the SMS flow</a>
+      <a class="btn ghost" href="https://github.com/harsh2274/crop_recommendation_system" target="_blank" rel="noopener">Source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="try" class="card">
+    <h2>Try it live</h2>
+    <p class="muted">Draw a field (or use the sample farm in Iowa), choose what you grow, and run the same analysis the SMS assistant uses. Results stream in as each dataset arrives. A new location can take up to a minute, because NASA's MODIS service is slow; repeat runs are cached.</p>
+    <div class="try-grid">
+      <div>
+        <div id="map"></div>
+        <div class="map-actions">
+          <button id="sample" class="btn small">Use sample field (Iowa)</button>
+          <button id="draw" class="btn small">✏️ Draw a field</button>
+          <button id="clear" class="btn small ghost">Clear</button>
+          <span id="map-msg" class="muted"></span>
+        </div>
+      </div>
+      <form id="form">
+        <fieldset>
+          <legend>Crops on this field (in rotation order)</legend>
+          <div id="crops" class="chips"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Water</legend>
+          <select id="irrigation">
+            <option value="none">Rain only</option>
+            <option value="limited">Some irrigation</option>
+            <option value="full">Enough irrigation</option>
+          </select>
+        </fieldset>
+        <fieldset>
+          <legend>What matters most</legend>
+          <div id="priorities" class="chips"></div>
+        </fieldset>
+        <button id="run" class="btn primary wide" type="submit" disabled>Analyze this field</button>
+        <ol id="progress" class="progress"></ol>
+      </form>
+    </div>
+  </section>
+
+  <div id="results" hidden>
+    <section class="card" id="r-summary"></section>
+    <div class="two">
+      <section class="card" id="r-climate"></section>
+      <section class="card" id="r-soil"></section>
+    </div>
+    <section class="card" id="r-crops"></section>
+    <section class="card" id="r-rotations"></section>
+    <div class="two">
+      <section class="card" id="r-hazards"></section>
+      <section class="card" id="r-pests"></section>
+    </div>
+    <section class="card" id="r-market"></section>
+    <section class="card" id="r-sources"></section>
+  </div>
+
+  <section id="sms" class="card">
+    <h2>How a farmer uses it: by text message</h2>
+    <div class="two">
+      <div>
+        <ol class="steps">
+          <li>The farmer texts the service number in their language, for example <em>"Hola, cultivo maíz"</em>.</li>
+          <li>They get a link to a one-page map: <strong>Find my farm → Start drawing → Continue</strong>.</li>
+          <li>A few simple questions follow: past crops, crop stage, problems, water, what matters most. Numbers work: "3".</li>
+          <li>A summary to confirm, then <strong>YES</strong>.</li>
+          <li>About a minute later, 4 plain texts arrive: their crops, the suggested plan, things to watch, an advisor note.</li>
+          <li>Any time after that: <em>"How and where should I sell my crops?"</em>, <em>"why sunflower?"</em>, <code>LINK</code> to redraw, <code>NEW</code>, <code>RESET</code>.</li>
+        </ol>
+        <p class="muted">Facts come from code; the AI model (Cloudflare Workers AI) only reads replies into fields and translates. A translation that changes any number is rejected and the English original is sent instead.</p>
+      </div>
+      <div class="phone" aria-label="Example conversation (illustration)">
+        <p class="phone-label">Example conversation (illustration)</p>
+        <div class="bubble in">Hi, I grow corn and soybeans</div>
+        <div class="bubble out">Hello! I am Farm Helper. I use NASA satellite and weather data to help you plan your crops. Please mark your farm on the map: open the link, allow location, tap each corner of your farm, then press Continue. 🔗</div>
+        <div class="bubble out">Thank you! I received your farm: about 64.0 hectares (158.0 acres). What did you grow on this field last year, and the year before?</div>
+        <div class="bubble in">soybeans, then corn</div>
+        <div class="bubble out">… Please check: crops now: corn, soybeans; water: rain only; most important: healthier soil… Reply YES to start the report.</div>
+        <div class="bubble in">YES</div>
+        <div class="bubble out">Your farm report. Corn is a good fit for this field. In past seasons it reached harvest in 9 of 10 years. Plant around late April, harvest around early October…</div>
+        <div class="bubble in">How and where should I sell my crops?</div>
+        <div class="bubble out">Prices at harvest (world market, 2025 dollars): Corn in October: usually $4.86 to $7.22 per bushel… When to sell: prices are usually highest in June…</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What's inside</h2>
+    <div class="three">
+      <div>
+        <h3>NASA data</h3>
+        <ul>
+          <li><strong>POWER</strong>: 20 years of daily temperature, rain, humidity, solar radiation, wind, root-zone wetness</li>
+          <li><strong>MODIS</strong> NDVI: greenness, bare months, observed green-up</li>
+          <li><strong>SRTM</strong>: slope and wet low spots</li>
+          <li><strong>EONET</strong>: fires, floods, storms nearby</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Plus</h3>
+        <ul>
+          <li>NOAA weather-station correction</li>
+          <li>USDA soil survey (SSURGO) / SoilGrids</li>
+          <li>USDA crop maps: what grew on the field</li>
+          <li>IMF prices and USDA supply/demand for the market answer</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Methods</h3>
+        <ul>
+          <li>18 crops replayed through 20 real seasons with a daily soil-water model</li>
+          <li>Variety length fitted to the local season</li>
+          <li>Rotation plans scored for soil health, water, resilience, pests, erosion; a ±20% robustness test</li>
+          <li>Backtested harvest-price ranges</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted">Runs entirely on Cloudflare: Workers, Agents SDK (Durable Objects), Workers AI, KV, D1 and Cron Triggers. Decision support only: it does not replace farmer judgment or local agronomic advice.</p>
+  </section>
+</main>
+<footer class="wrap muted">Farm Helper · NASA Space Apps 2026 · <a href="https://github.com/harsh2274/crop_recommendation_system" target="_blank" rel="noopener">GitHub</a> · API: <code>POST /analyze</code></footer>
+<script src="app.js"></script>
+</body>
+</html>

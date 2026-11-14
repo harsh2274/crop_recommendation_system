@@ -33,7 +33,9 @@ export default {
     const map = url.pathname.match(MAP_PATH);
     if (map) return mapPage(request, env, ctx, map[1], map[2]);
     if (url.pathname === "/admin/ingest" && request.method === "POST") return adminIngest(request, env);
-    return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token"] });
+    // "/" is the public demo page (static assets); /api describes the API.
+    if (url.pathname === "/api") return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token"], demo: "/" });
+    return json({ error: "Not found", api: "/api" }, 404);
   },
 
   /** Monthly Cron Trigger: refresh market data in D1. */
