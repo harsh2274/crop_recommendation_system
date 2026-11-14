@@ -335,6 +335,7 @@ export interface MarketCrop {
   demand: { marketYear: number; stocksToUse: number; stocksVsUsual: "lower" | "normal" | "higher"; exportsTrend: "rising" | "falling" | "flat" } | null;
   yieldTHa: number | null; // US national median of the last 5 years (USDA PSD)
   grossRevenuePerHa: PriceRange | null; // yield x season fit x price, before costs
+  bestMonthRevenuePerHa: number | null; // typical revenue/ha if stored and sold in bestSellMonth, before costs
   marketScore: number; // 0..100
 }
 

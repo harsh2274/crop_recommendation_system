@@ -153,12 +153,17 @@ export function buildMarket(data: MarketData, input: MarketInput): MarketSection
       demand: demandSignals(data, c.cropId),
       yieldTHa: yieldTHa === null ? null : round(yieldTHa, 2),
       grossRevenuePerHa: yieldTHa === null ? null : rounded(scale(price, yieldTHa * c.seasonFitProbability)),
+      bestMonthRevenuePerHa: null,
       marketScore: 0,
     }];
   });
   if (crops.length === 0) return null;
   const pricesThrough = [...data.prices.values()].flatMap((m) => [...m.keys()]).sort().at(-1)!;
   const dollarsOf = [...data.cpi.keys()].sort().at(-1)!;
+
+  for (const m of crops) {
+    if (m.grossRevenuePerHa && m.bestSellMonth) m.bestMonthRevenuePerHa = round((m.grossRevenuePerHa.p50 * m.bestSellMonth.usdPerTonneP50) / m.price.usdPerTonne.p50);
+  }
 
   // Market score: expected revenue relative to the best candidate, lowered for wide (risky) price ranges.
   const best = Math.max(...crops.map((m) => m.grossRevenuePerHa?.p50 ?? 0));

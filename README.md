@@ -7,7 +7,7 @@ Farmers text a phone number in their own language. The assistant asks a few simp
 3. **Hazards and when to act**:
    - frost, heat, drought at flowering, waterlogging, erosion, disease, pest cycles, soil limits, nearby fires/floods and long-term trends
    - a pest-scouting calendar
-4. **Market potential, on request**: when the farmer asks how, where or when to sell, harvest-month price ranges, the month prices are usually highest, US supply signals, revenue per hectare, and a ranking that blends suitability with market value.
+4. **Market potential, on request**: when the farmer asks how, where or when to sell, the crops that fit their field ranked by value per hectare after harvest (sold right away or stored until prices usually peak), harvest-month price ranges, US supply signals and where to sell.
 
 **No hallucinated facts:** every number, date, link and recommendation the farmer reads is written by code from the data. The language model only reads the farmer's replies into fields and translates code-written text; a translation that changes any number is rejected. It supports, and does not replace, farmer judgment and local expertise.
 
@@ -55,7 +55,7 @@ The conversation is a fixed sequence. One question at a time:
 | Anything, in any language | The reply comes in that language (the language of the latest written message) |
 | `YES` (sí, oui, ja…) at the summary | The report starts: 4 texts about a minute later |
 | `LINK`, "send the map again", "I drew the wrong field" | The map link is resent; a new drawing replaces the old one |
-| "How and where should I sell my crops?", "When should I sell my corn?", `sell` / `precio` / `mercado`… | 4 market texts: prices at harvest, best month to sell, earnings per hectare, where to sell |
+| "How and where should I sell my crops?", "When should I sell my corn?", `sell` / `precio` / `mercado`… | 4 market texts: which crops pay the most after harvest (value per hectare, at harvest or stored), prices at harvest, best month to sell, where to sell |
 | A question ("why sunflower?", "when do I plant corn?") | An answer picked from pre-written facts of their report, or "I do not have that information" |
 | New information ("now I grow wheat") | Saved; the summary is shown again for a new report |
 | `NEW` | Start a new report with the current information |

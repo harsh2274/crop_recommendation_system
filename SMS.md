@@ -30,7 +30,7 @@ understand() → fields → apply() → nextStep() → code-written English text
   3. past crops · 4. crop stage (1-5) · 5. problems (or NO) · 6. water (1-3) · 7. what matters most (1-5)
   8. summary of everything collected → "Reply YES to start the report, or tell me what to change."
   ▼ YES → "I am calculating your farm report now…" → analysis pipeline (same Worker)
-  4 report texts (facts.ts): your crops · suggested plan + stability + programs · things to watch + next pest check · advisor note
+  4 report texts (facts.ts): your crops · suggested plan + stability + programs · things to watch + next pest check · advisor note (which also says they can ask which crops sell best and where to sell)
   ▼
 Questions → snippet answers · "how / where / when should I sell?" → market texts · new information → summary again · NEW → new report · RESET → delete profile
 ```
@@ -42,10 +42,10 @@ Every optional question accepts "don't know" or "no" and moves on.
 - while a report is calculating: "reply LINK after it arrives"; a shape submitted from an older link during a calculation is kept, and the farmer is offered a new report afterwards
 - an expired link (72 h) is replaced automatically
 
-**Market questions** ("how should I sell my corn?", "where can I sell?", "when should I sell?", "what are prices?", one-word "sell / price / market / vender / precio / mercado / prix…"): after a report, 4 texts written by code from `result.market`:
-1. prices at harvest: P10–P90 range and typical price per bushel (US) or tonne, in dollars of the latest CPI month
-2. when to sell: the month prices are usually highest and how much above harvest time
-3. best expected earnings per hectare before costs, plus US stock signals when unusual
+**Market questions** ("how should I sell my corn?", "where can I sell?", "when should I sell?", "what are prices?", "which crop sells best?", one-word "sell / price / market / vender / precio / mercado / prix…"): after a report, 4 texts written by code from `result.market`:
+1. crops that pay the most after harvest on this field: the crops that fit, ranked by value per hectare before costs, each with its value if sold at harvest and, when storing pays, if sold in the month prices are usually highest
+2. prices at harvest: P10–P90 range and typical price per bushel (US) or tonne, in dollars of the latest CPI month
+3. when to sell: the month prices are usually highest and how much above harvest time, plus US stock signals when unusual
 4. where to sell: no local buyer list; compare several elevators, cooperatives or processors; ranges are not promises
 
 Before a report the reply is "I can answer questions once your farm report is ready"; without market data, an honest "I do not have market prices for your crops yet".

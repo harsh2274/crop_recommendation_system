@@ -164,7 +164,7 @@ World benchmark prices for corn, soybean and wheat, computed with every report. 
 | Field | Meaning |
 |---|---|
 | `basis`, `pricesThrough`, `dollarsOf`, `dataUpdated` | price source; latest price month; prices are adjusted to this month's US dollars (latest CPI month); last ingestion run |
-| `crops[]` | per priced crop that suits the field: `harvestMonth` (from `cropSuitability.harvestDate`); `price.usdPerTonne` / `price.usdPerBushel` (US) as `{p10, p50, p90}` over the last 10 years; `backtest {years, coverage, mapePct, naiveMapePct}`; `bestSellMonth {month, usdPerTonneP50, premiumPct}`; `demand {marketYear, stocksToUse, stocksVsUsual, exportsTrend}` (USDA PSD, US); `yieldTHa` (US national, median of 5 years); `grossRevenuePerHa` (before costs); `marketScore` 0–100 |
+| `crops[]` | per priced crop that suits the field: `harvestMonth` (from `cropSuitability.harvestDate`); `price.usdPerTonne` / `price.usdPerBushel` (US) as `{p10, p50, p90}` over the last 10 years; `backtest {years, coverage, mapePct, naiveMapePct}`; `bestSellMonth {month, usdPerTonneP50, premiumPct}`; `demand {marketYear, stocksToUse, stocksVsUsual, exportsTrend}` (USDA PSD, US); `yieldTHa` (US national, median of 5 years); `grossRevenuePerHa` (before costs, sold at harvest); `bestMonthRevenuePerHa` (typical value per hectare if stored and sold in `bestSellMonth`); `marketScore` 0–100 |
 | `ranking[]` | `{cropId, agronomic, market, final}`: `final = (1 − incomeWeight)·agronomic + incomeWeight·market` |
 | `rotationRanking[]` | the same per rotation; `final` is `null` (and listed last) when a rotation contains a crop without market data |
 | `incomeWeight` | `priorities.income / 10` (0–0.5) |

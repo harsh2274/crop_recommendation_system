@@ -86,8 +86,13 @@ describe("market texts", () => {
     const msgs = marketMessages(withMarket)!;
     expect(msgs.length).toBeGreaterThanOrEqual(3);
     const corn = withMarket.market!.crops.find((c) => c.cropId === "corn")!;
-    expect(msgs[0]).toContain(`$${corn.price.usdPerBushel!.p50.toFixed(2)}`);
-    expect(msgs[1]).toContain("June");
+    // 1st: crops ranked by value after harvest, with the stored-until-best-month value
+    expect(msgs[0]).toMatch(/^Crops that pay the most after harvest/);
+    expect(msgs[0]).toContain(`1. Corn: about $${corn.grossRevenuePerHa!.p50} if sold at harvest (October)`);
+    expect(msgs[0]).toContain(`about $${corn.bestMonthRevenuePerHa} if stored and sold in June`);
+    expect(corn.bestMonthRevenuePerHa).toBeGreaterThan(corn.grossRevenuePerHa!.p50);
+    expect(msgs[1]).toContain(`$${corn.price.usdPerBushel!.p50.toFixed(2)}`);
+    expect(msgs[2]).toContain("June");
     expect(msgs.join(" ")).not.toMatch(/https?:\/\//);
   });
   it("say nothing when there is no market data", () => {

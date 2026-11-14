@@ -232,16 +232,20 @@
 
   function renderMarket(m) {
     if (!m) { $("r-market").innerHTML = `<h2>Market</h2><p class="muted">No market data for these crops.</p>`; return; }
-    const rows = m.crops.map((c) => {
+    const value = (c) => Math.max(c.grossRevenuePerHa?.p50 ?? 0, c.bestMonthRevenuePerHa ?? 0);
+    const rows = m.crops.slice().sort((a, b) => value(b) - value(a)).map((c, i) => {
       const p = c.price.usdPerBushel ?? c.price.usdPerTonne, unit = c.price.usdPerBushel ? "bu" : "t";
-      return `<tr><td><strong>${esc(cropNames[c.cropId] ?? c.cropId)}</strong></td><td>${esc(MONTHS[c.harvestMonth - 1])}</td>
+      const stored = c.bestMonthRevenuePerHa && c.bestSellMonth && c.bestSellMonth.premiumPct >= 2 ? `${esc(c.bestMonthRevenuePerHa)} <span class="muted">(${esc(MONTHS[c.bestSellMonth.month - 1])})</span>` : "–";
+      return `<tr><td><strong>${i + 1}. ${esc(cropNames[c.cropId] ?? c.cropId)}</strong></td><td>${esc(MONTHS[c.harvestMonth - 1])}</td>
         <td>$${esc(p.p10)} – $${esc(p.p90)}/${unit}<br><span class="muted">typical $${esc(p.p50)}</span></td>
         <td>${c.bestSellMonth && c.bestSellMonth.premiumPct >= 2 ? `${esc(MONTHS[c.bestSellMonth.month - 1])} (+${esc(Math.round(c.bestSellMonth.premiumPct))}%)` : "at harvest"}</td>
-        <td>${c.grossRevenuePerHa ? `$${esc(c.grossRevenuePerHa.p50)}` : "–"}</td>
+        <td>${c.grossRevenuePerHa ? `${esc(c.grossRevenuePerHa.p50)}` : "–"}</td>
+        <td>${stored}</td>
         <td class="muted">${esc(c.backtest.mapePct)}% vs ${esc(c.backtest.naiveMapePct)}%</td></tr>`;
     }).join("");
-    $("r-market").innerHTML = `<h2>Market (what the farmer gets when asking "how and where should I sell?")</h2>
-      <div class="scroll"><table><thead><tr><th>Crop</th><th>Harvest</th><th>Price at harvest</th><th>Usually best month</th><th>Revenue/ha before costs</th><th>Backtest error vs naive</th></tr></thead><tbody>${rows}</tbody></table></div>
+    $("r-market").innerHTML = `<h2>Which crops pay the most after harvest</h2>
+      <p class="muted">What the farmer gets by texting "how and where should I sell?". Ranked by value per hectare (before costs): sold at harvest, or stored and sold in the month prices are usually highest.</p>
+      <div class="scroll"><table><thead><tr><th>Crop</th><th>Harvest</th><th>Price at harvest</th><th>Usually best month</th><th>Value/ha at harvest</th><th>Value/ha if stored</th><th>Backtest error vs naive</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="muted">${esc(m.notes.join(" "))}</p>`;
   }
 

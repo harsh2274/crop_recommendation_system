@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-11-14T21:55:33.055Z",
+  "generatedAt": "2026-11-14T22:30:59.000Z",
   "field": {
     "fieldId": "demo-iowa-001",
     "centroid": {
@@ -1580,6 +1580,7 @@
           "p50": 2201,
           "p90": 2881
         },
+        "bestMonthRevenuePerHa": 2333,
         "marketScore": 87
       },
       {
@@ -1622,6 +1623,7 @@
           "p50": 1351,
           "p90": 1511
         },
+        "bestMonthRevenuePerHa": 1406,
         "marketScore": 56
       },
       {
@@ -1664,6 +1666,7 @@
           "p50": 613,
           "p90": 762
         },
+        "bestMonthRevenuePerHa": 613,
         "marketScore": 24
       }
     ],

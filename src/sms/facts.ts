@@ -97,7 +97,7 @@ export function reportMessages(r: PipelineOutput): string[] {
     `Your farm report. ${crops}${unresolved}`,
     plan,
     `Things to watch: ${watch}`,
-    "These are suggestions from satellite and weather data. Please compare them with your own experience or a local farm advisor. You can reply with any question.",
+    "These are suggestions from satellite and weather data. Please compare them with your own experience or a local farm advisor. You can reply with any question, for example which crops sell best and where to sell.",
   ];
 }
 
@@ -126,9 +126,14 @@ export function marketMessages(r: PipelineOutput): string[] | null {
     return `${cropName(c.cropId)}: prices are usually highest in ${MONTHS[b.month - 1]}, about ${Math.round(b.premiumPct)}% above harvest time. Storing until then can pay if storage costs less than that.`;
   });
 
-  const earnings = m.ranking.slice(0, 3).flatMap((x) => {
-    const rev = m.crops.find((c) => c.cropId === x.cropId)?.grossRevenuePerHa?.p50;
-    return rev ? [`${cropName(x.cropId)} about ${money(rev, false)}`] : [];
+  // Which crops pay the most after harvest: ranked by the better of selling at harvest or in the usual best month.
+  const value = (c: (typeof m.crops)[number]) => Math.max(c.grossRevenuePerHa?.p50 ?? 0, c.bestMonthRevenuePerHa ?? 0);
+  const best = m.crops.filter((c) => c.grossRevenuePerHa).sort((a, b) => value(b) - value(a)).slice(0, 3);
+  const ranked = best.map((c, i) => {
+    const atHarvest = `about ${money(c.grossRevenuePerHa!.p50, false)} if sold at harvest (${MONTHS[c.harvestMonth - 1]})`;
+    const later = c.bestMonthRevenuePerHa && c.bestSellMonth && c.bestSellMonth.premiumPct >= 2
+      ? `, about ${money(c.bestMonthRevenuePerHa, false)} if stored and sold in ${MONTHS[c.bestSellMonth.month - 1]}` : "";
+    return `${i + 1}. ${cropName(c.cropId)}: ${atHarvest}${later}.`;
   });
   const demand = crops.flatMap((c) => {
     if (!c.demand || c.demand.stocksVsUsual === "normal") return [];
@@ -136,9 +141,9 @@ export function marketMessages(r: PipelineOutput): string[] | null {
   });
 
   return [
+    ranked.length ? `Crops that pay the most after harvest on this field (per hectare, before costs): ${ranked.join(" ")}` : "",
     `Prices at harvest (world market, ${m.dollarsOf.slice(0, 4)} dollars): ${prices.join(" ")}`,
-    `When to sell: ${timing.join(" ")}`,
-    (earnings.length ? `Best expected earnings per hectare, before costs: ${earnings.join(", ")}.` : "") + (demand.length ? ` ${demand.join(" ")}` : ""),
+    `When to sell: ${timing.join(" ")}` + (demand.length ? ` ${demand.join(" ")}` : ""),
     "Where to sell: I do not have a list of local buyers. Ask several nearby grain elevators, cooperatives or processors for their price before you sell, and compare. These are ranges from past prices, not promises.",
   ].filter((t) => t.trim().length > 0);
 }

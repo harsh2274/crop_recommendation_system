@@ -178,7 +178,7 @@ For each priced crop that suits the field (class not poor):
 2. **Backtest:** each of the last 5 years is re-forecast from the 10 years before it: P10–P90 coverage, and P50 error vs the naive "same month last year".
 3. **Best month to sell:** the month with the highest 10-year median real price, and its premium over the harvest month.
 4. **Demand signals (USDA PSD):** stocks-to-use = ending stocks / (domestic consumption + exports) in the latest market year (the current USDA projection), compared with the previous 20 years: lower / normal / higher (thirds). Exports trend = OLS slope of the last 10 years relative to their mean (> +1 %/yr rising, < −1 %/yr falling).
-5. **Gross revenue per ha (before costs):** US national yield (median of the last 5 years) × the field's season-fit probability × price range.
+5. **Gross revenue per ha (before costs):** US national yield (median of the last 5 years) × the field's season-fit probability × price range. The same with the best month's median price gives the value if the crop is stored and sold then (`bestMonthRevenuePerHa`); the SMS answer ranks crops by the better of the two ("which crops pay the most after harvest").
 6. **Market score:** revenue relative to the best candidate × (1 − 0.3 · min(1, (P90 − P10) / P50)).
 7. **Ranking:** `final = (1 − w)·suitability + w·marketScore`, `w = priorities.income / 10`. Rotations are ranked the same way using the mean revenue of their years; a rotation containing an unpriced crop gets no final market score and is listed after the ranked ones.
 
