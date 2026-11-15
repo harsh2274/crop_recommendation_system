@@ -16,6 +16,7 @@ Farmers text a phone number in their own language. The assistant asks a few simp
 | What | Where |
 |---|---|
 | Public demo page | `https://farm-rotation-pipeline.rshaspaceapps.workers.dev` (draw a field, watch the analysis stream in) |
+| SMS simulator (no phone needed) | `https://farm-rotation-pipeline.rshaspaceapps.workers.dev/chat`: the whole text conversation in a browser, with the same assistant, map, analysis, market answer and PDF report |
 | Backend (Cloudflare Worker) | same address; API description at `/api` |
 | Analysis API | `POST /analyze` (streams results) · `POST /analyze?format=json` (one JSON result) |
 | SMS webhook (Twilio) | `POST /sms` (only accepts Twilio-signed requests) |
@@ -24,6 +25,8 @@ Farmers text a phone number in their own language. The assistant asks a few simp
 | Service phone number | the Twilio number whose SMS webhook points at `/sms` (see the Twilio console of the account that owns it) |
 
 ## Try it in two minutes
+Without a phone: open `/chat` (link above) and text it there; everything below works the same, with the replies shown in the browser.
+
 **Analysis API** (no account needed):
 ```bash
 git clone https://github.com/harsh2274/crop_recommendation_system.git && cd crop_recommendation_system

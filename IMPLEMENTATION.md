@@ -14,7 +14,7 @@ A single Cloudflare Worker in TypeScript, with two runtime dependencies (`proj4`
 ## File map
 ```
 src/
-  index.ts            HTTP: POST /analyze (SSE or ?format=json) · POST /sms (Twilio) · GET|POST /map/:farmer/:token · GET /report/:farmer/:token[/pdf]
+  index.ts            HTTP: POST /analyze (SSE or ?format=json) · POST /sms (Twilio) · GET|POST /map/:farmer/:token · GET /report/:farmer/:token[/pdf] · POST|GET /api/chat (browser SMS simulator)
   env.ts              Bindings and secrets
   pipeline.ts         Orchestrator: startFetches (parallel, cached; also used by prefetch), section order,
                       rotation fallback (farmer > CDL > current crop > best crop), robustness re-runs,
@@ -59,7 +59,7 @@ src/
     page.ts           Page the PDF link opens (view + download)
     twilio.ts         Signature verification, outbound SMS
 test/                 geo-input · pipeline (stubbed APIs) · methods (Penman-Monteith, rotation inference) · sms · sms-flow (translation guard, facts, flow) · market · report (PDF content and rendering)
-public/               demo page served as static assets: index.html, style.css, app.js (draw a field, stream /analyze)
+public/               demo page served as static assets: index.html, style.css, app.js (draw a field, stream /analyze) · chat.html (SMS simulator, /chat)
 examples/             sample-input.json (Iowa field, UTM 15N) and its live sample-output.json
 ```
 Dependency direction: `index → {pipeline, sms} → analysis modules → sources`. There are no cycles.

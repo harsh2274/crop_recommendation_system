@@ -24,6 +24,12 @@ interface PdfReport { token: string; createdAt: number; generatedAt: string; lan
 const LINK_TTL_MS = 72 * 3600_000;
 const PDF_TTL_MS = 30 * 24 * 3600_000;
 const SMS_GAP_MS = 1500; // between consecutive texts, so carriers deliver a series in order
+// Browser chat (/chat): same agent and flow; "texts" go to an outbox the page polls instead of Twilio.
+export const WEB_PREFIX = "web:";
+const WEB_MAX_MESSAGES = 100; // per browser conversation (it's public and every turn uses Workers AI)
+const WEB_MAX_CHARS = 500;
+const OUTBOX_KEEP = 200;
+interface OutboxItem { n: number; at: number; body: string }
 const NO_RETRY = { retry: { maxAttempts: 1 } }; // a retried turn would text the farmer twice
 const OPT_OUT = /^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i; // Twilio opt-out keywords: Twilio handles them
 
@@ -69,6 +75,21 @@ export class FarmerSession extends Agent<Env, FarmerState> {
     // (The Worker's map handler starts the data prefetch in its own request, so nothing slow runs here.)
     await this.queue("handleTurn", { kind: "boundary", areaHa: check.areaHa } satisfies TurnItem, NO_RETRY);
     return { ok: true as const, areaHa: check.areaHa };
+  }
+
+  /** A message typed in the browser chat; limited, then handled exactly like an SMS. */
+  async webInbound(session: string, text: string, origin: string): Promise<{ ok: boolean; error?: string }> {
+    if (!text.trim() || text.length > WEB_MAX_CHARS) return { ok: false, error: "length" };
+    const count = ((await this.ctx.storage.get<number>("webCount")) ?? 0) + 1;
+    if (count > WEB_MAX_MESSAGES) return { ok: false, error: "limit" };
+    await this.ctx.storage.put("webCount", count);
+    await this.inbound(WEB_PREFIX + session, text.trim(), crypto.randomUUID(), origin);
+    return { ok: true };
+  }
+
+  /** Browser chat: the texts sent to this farmer after number `after`. */
+  async webMessages(after: number): Promise<OutboxItem[]> {
+    return ((await this.ctx.storage.get<OutboxItem[]>("outbox")) ?? []).filter((m) => m.n > after);
   }
 
   /** The translated report document behind a PDF link, or null if the link is unknown or expired. */
@@ -237,7 +258,8 @@ export class FarmerSession extends Agent<Env, FarmerState> {
       const wait = this.lastSent + SMS_GAP_MS - Date.now();
       if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       try {
-        await sendSms(this.env, to, body);
+        if (to.startsWith(WEB_PREFIX)) await this.toOutbox(body);
+        else await sendSms(this.env, to, body);
       } catch (e) {
         console.error("sms send failed", e);
       } finally {
@@ -246,6 +268,12 @@ export class FarmerSession extends Agent<Env, FarmerState> {
     };
     this.sending = this.sending.then(send);
     return this.sending;
+  }
+
+  private async toOutbox(body: string): Promise<void> {
+    const outbox = (await this.ctx.storage.get<OutboxItem[]>("outbox")) ?? [];
+    outbox.push({ n: (outbox.at(-1)?.n ?? 0) + 1, at: Date.now(), body });
+    await this.ctx.storage.put("outbox", outbox.slice(-OUTBOX_KEEP));
   }
 
   /** Link to the PDF report of `result`; the document is built and translated once per result and language. */

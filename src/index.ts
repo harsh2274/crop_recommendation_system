@@ -3,6 +3,7 @@
 //   POST /sms                      Twilio inbound-SMS webhook -> the farmer's Durable Object
 //   GET|POST /map/:farmer/:token   boundary-drawing page and its submit endpoint
 //   GET /report/:farmer/:token     page holding the farmer's PDF report; /pdf serves the PDF itself
+//   POST|GET /api/chat             browser chat (/chat): the SMS conversation without a phone
 import { getAgentByName } from "agents";
 import type { Env } from "./env";
 import { InputError } from "./input";
@@ -14,6 +15,8 @@ import { mapView, renderPdf } from "./report/pdf";
 import { USER_AGENT } from "./sources/http";
 import { renderMapPage, type MapPageConfig } from "./sms/mappage";
 import { emptyTwiml, verifySignature } from "./sms/twilio";
+
+import { WEB_PREFIX } from "./sms/session";
 
 export { FarmerSession } from "./sms/session";
 export type { Env };
@@ -42,8 +45,9 @@ export default {
     const report = url.pathname.match(REPORT_PATH);
     if (report && request.method === "GET") return reportPage(env, url, report[1], report[2], !!report[3]);
     if (url.pathname === "/admin/ingest" && request.method === "POST") return adminIngest(request, env);
+    if (url.pathname === "/api/chat") return chat(request, env, url);
     // "/" is the public demo page (static assets); /api describes the API.
-    if (url.pathname === "/api") return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token", "GET /report/:farmer/:token"], demo: "/" });
+    if (url.pathname === "/api") return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token", "GET /report/:farmer/:token", "POST|GET /api/chat"], demo: "/", chat: "/chat" });
     return json({ error: "Not found", api: "/api" }, 404);
   },
 
@@ -130,6 +134,30 @@ async function sms(request: Request, env: Env, url: URL): Promise<Response> {
   const farmer = await getAgentByName(env.FARMER, farmerName(env, from)); // one Agent per phone number
   await farmer.inbound(from, text, params.MessageSid ?? crypto.randomUUID(), url.origin);
   return emptyTwiml();
+}
+
+// ------------------------------------------------------------------ browser chat
+
+const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+/** The SMS conversation in a browser: POST {session, text} sends a message, GET ?session=&after= reads the replies. */
+async function chat(request: Request, env: Env, url: URL): Promise<Response> {
+  if (request.method === "POST") {
+    let body: { session?: unknown; text?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return json({ ok: false, error: "json" }, 400);
+    }
+    if (typeof body.session !== "string" || !SESSION_ID.test(body.session) || typeof body.text !== "string") return json({ ok: false, error: "input" }, 400);
+    const farmer = await getAgentByName(env.FARMER, farmerName(env, WEB_PREFIX + body.session));
+    const out = await farmer.webInbound(body.session, body.text, url.origin);
+    return json(out, out.ok ? 200 : out.error === "limit" ? 429 : 400);
+  }
+  const session = url.searchParams.get("session") ?? "";
+  if (request.method !== "GET" || !SESSION_ID.test(session)) return json({ error: "input" }, 400);
+  const farmer = await getAgentByName(env.FARMER, farmerName(env, WEB_PREFIX + session));
+  return json({ messages: await farmer.webMessages(Number(url.searchParams.get("after")) || 0) });
 }
 
 /** Agent name for a phone number: the namespace's keyed hash, so URLs never reveal the number. */

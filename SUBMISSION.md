@@ -83,6 +83,8 @@ The limits we tell the farmer about:
 
 For the farmer, it's a text conversation plus one map page, and a PDF if they want it. For everyone else there's a public demo page where you draw a field and watch the analysis stream in section by section, ending with the table of which crops pay the most after harvest: https://farm-rotation-pipeline.rshaspaceapps.workers.dev
 
+To try the farmer side without a phone, there's an SMS simulator: the same assistant, map, report and PDF, with the texts showing up in a chat window: https://farm-rotation-pipeline.rshaspaceapps.workers.dev/chat
+
 Everything runs on one Cloudflare Worker in TypeScript:
 - **Agents SDK** (Durable Objects): one agent per phone number, holding the farmer's profile and handling messages in order.
 - **Workers AI** (Mistral Small 3.1): reads replies into fields and translates. When a translation fails our checks, Llama 4 Scout gets a second try (Mistral garbles some Hindi letters).

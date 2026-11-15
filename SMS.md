@@ -93,6 +93,13 @@ Before a report the reply is "I can answer questions once your farm report is re
 
 **Model:** Workers AI `@cf/mistralai/mistral-small-3.1-24b-instruct`: about 1.6 s per call with correct structured output and accented Spanish in our benchmark (faster and more reliable than the other function-calling models tested). A rejected translation is retried once with `@cf/meta/llama-4-scout-17b-16e-instruct`, one message per call: the main model garbles some Devanagari letters every time (Hindi "सुझाव" comes back with U+FFFD), while Llama 4 Scout translated the same Hindi texts correctly in 6 of 6 single-message calls (~5 s); given several messages in one call it returns only one entry, hence one per call. Each turn makes at most two calls when nothing is rejected (read the message, translate the reply), and the analysis runs detached from the message queue (`keepAliveWhile`), so a new text is never stuck behind it. Change `MODEL` in `src/sms/ai.ts`.
 
+## Browser simulator (`/chat`)
+The same conversation without a phone, for judges and teammates: `public/chat.html` is a phone-style chat page.
+- Each browser chat gets a random id (kept in the browser) and its own `FarmerSession` agent, named from `web:<id>`, so it never touches a real phone number's profile.
+- `POST /api/chat {session, text}` → `webInbound()` → the same `inbound()` and queued turns as an SMS. For a `web:` farmer, `text()` writes to an outbox in the agent's storage instead of calling Twilio, with the same 1.5 s pacing; the page polls `GET /api/chat?session=&after=` every 1.5 s.
+- Map and PDF links are the real ones; the map page opens in a new tab.
+- It's public and every turn uses Workers AI, so a message is at most 500 characters and a chat at most 100 messages (`WEB_MAX_*` in `session.ts`); "New chat" starts over with a new id.
+
 ## Demo setup with the Twilio CLI
 You need two Twilio numbers in the same account:
 - **Service number:** farmers text it; its SMS webhook is the Worker.
