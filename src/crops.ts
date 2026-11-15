@@ -34,6 +34,7 @@ export interface Crop {
   phMin: number;
   phMax: number;
   perennial?: boolean;
+  paddy?: boolean; // grown in a flooded field: water need includes soaking the field and percolation
   keyPests: string;
   humidDiseases: string;
 }
@@ -89,6 +90,10 @@ export const CROPS: Crop[] = [
       sowing: "spring", sowTempC: 10, tBaseC: 7, gddToMaturity: 1100, frostKillC: -2, heatStressC: 30, kc: 0.85,
       droughtTolerance: 1, wetTolerance: 1, rootDepthM: 0.5, nFixing: false, nDemanding: true, residue: 1, phMin: 5.0, phMax: 6.5,
       keyPests: "Colorado potato beetle", humidDiseases: "late blight, early blight" }),
+  c({ id: "rice", name: "Rice", aliases: ["paddy", "paddy rice", "rough rice", "arroz", "riz"], family: "Poaceae", role: "cash",
+      sowing: "after_frost", sowTempC: 15, tBaseC: 10, gddToMaturity: 1600, gddRange: [1400, 1800], frostKillC: 0, heatStressC: 35, kc: 1.1,
+      droughtTolerance: 1, wetTolerance: 3, rootDepthM: 0.5, nFixing: false, nDemanding: true, residue: 2, phMin: 5.0, phMax: 7.5,
+      paddy: true, keyPests: "rice water weevil, rice stink bug", humidDiseases: "rice blast, sheath blight" }),
   c({ id: "alfalfa", name: "Alfalfa", aliases: ["lucerne", "hay"], family: "Fabaceae", role: "forage",
       sowing: "spring", sowTempC: 8, tBaseC: 5, gddToMaturity: 1600, frostKillC: -25, heatStressC: 38, kc: 0.95,
       droughtTolerance: 3, wetTolerance: 1, rootDepthM: 3.0, nFixing: true, nDemanding: false, residue: 2, phMin: 6.5, phMax: 7.8,

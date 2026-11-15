@@ -20,6 +20,8 @@ So we put the whole thing behind SMS. The project has two parts.
 - the 2–3 biggest dangers with what to do
 - a reminder to check it against their own experience
 
+The last text asks if they want the complete report as a PDF. If they say yes, they get a link to a page with the PDF: a satellite map of their farm with its outline, charts of crop fit, rain and temperature by month, the plans side by side, the dangers, the market numbers and the texts they got. It's something they can keep or show a farm advisor.
+
 Every plan is compared against what they already grow, and each one comes with why, the evidence, the benefits, the risks and what to verify, which is what the challenge asked for.
 
 **Part 2: what sells well (my teammate's part).** Once the farmer knows which crops fit, the next question is which of them will bring the most money. When they text something like "how and where should I sell my crops?", they get the crops that fit their field ranked by value per hectare after harvest, sold right away or stored until the month prices are usually highest. For our Iowa test field the answer was:
@@ -27,7 +29,7 @@ Every plan is compared against what they already grow, and each one comes with w
 - soybean: about $1,351 at harvest, about $1,406 if sold in July
 - winter wheat: about $613, best sold at harvest
 
-The same reply gives the usual price range at harvest, whether US stocks are tighter than usual, and an honest line on where to sell: we don't have a list of local buyers, so compare offers from nearby elevators and cooperatives.
+Rice is priced too, as milled export rice. The same reply gives the usual price range at harvest, whether US stocks are tighter than usual, and an honest line on where to sell: we don't have a list of local buyers, so compare offers from nearby elevators and cooperatives.
 
 ## 3. Data you used
 *Name each NASA dataset or resource and how you used it. Add any other data.* (Judged: relevance, science)
@@ -44,7 +46,7 @@ Other data, part 1:
 - **USDA Cropland Data Layer**, for what actually grew on the field over the last 8 years.
 
 Other data, part 2 (market):
-- **IMF monthly commodity prices** for corn, soybeans and wheat since 1990 (via DBnomics), for the price range in each crop's harvest month and the month prices are usually highest.
+- **IMF monthly commodity prices** for corn, soybeans, wheat and rice since 1990 (via DBnomics), for the price range in each crop's harvest month and the month prices are usually highest.
 - **US CPI** (BLS, via DBnomics), to put every year's prices in the same dollars.
 - **USDA PSD** supply and demand: US production, exports, domestic use and ending stocks give a stocks-to-use signal (tight stocks tend to support prices), and US yields turn prices into value per hectare.
 - **US Census geocoder**, for the field's state and county.
@@ -57,7 +59,7 @@ Part 1 asks: given this field's real weather history, soil and slope, which crop
 Rotation decisions come down to the frost-free window, the water balance, heat at flowering and how long the soil sits bare during heavy rain. POWER measures those daily, for 20 years, anywhere on Earth. MODIS shows when the field is actually bare, and SRTM gives the slope that drives erosion.
 
 How we use the data:
-1. We replay 18 crops through each of the 20 real seasons: sow by frost, soil temperature or rainfall onset; count growing degree days to maturity; run an FAO-56 daily soil-water bucket; check for killing frost and heat days. That gives answers like "reached harvest in 9 of 10 years" instead of a vague score.
+1. We replay 19 crops (rice as a flooded paddy) through each of the 20 real seasons: sow by frost, soil temperature or rainfall onset; count growing degree days to maturity; run an FAO-56 daily soil-water bucket; check for killing frost and heat days. That gives answers like "reached harvest in 9 of 10 years" instead of a vague score.
 2. Rotations are laid out day by day to get soil cover, a RUSLE erosion estimate, legume share and pest-family repeats.
 3. We re-run everything 8 times with crop parameters shifted ±20%, to see if the recommendation holds.
 
@@ -79,15 +81,15 @@ The limits we tell the farmer about:
 ## 5. What it is and how it works
 *What it looks like and does. Tools, code, APIs. A screenshot link helps.* (Judged: coding)
 
-For the farmer, it's a text conversation plus one map page. For everyone else there's a public demo page where you draw a field and watch the analysis stream in section by section, ending with the table of which crops pay the most after harvest: https://farm-rotation-pipeline.rshaspaceapps.workers.dev
+For the farmer, it's a text conversation plus one map page, and a PDF if they want it. For everyone else there's a public demo page where you draw a field and watch the analysis stream in section by section, ending with the table of which crops pay the most after harvest: https://farm-rotation-pipeline.rshaspaceapps.workers.dev
 
 Everything runs on one Cloudflare Worker in TypeScript:
 - **Agents SDK** (Durable Objects): one agent per phone number, holding the farmer's profile and handling messages in order.
-- **Workers AI** (Mistral Small 3.1): reads replies into fields and translates.
+- **Workers AI** (Mistral Small 3.1): reads replies into fields and translates. When a translation fails our checks, Llama 4 Scout gets a second try (Mistral garbles some Hindi letters).
 - **KV:** caches NASA and USDA responses.
 - **D1:** holds the market data (prices, CPI, USDA supply and demand), refreshed monthly by a Cron Trigger, so a farmer never waits on a market website.
 
-Twilio handles the SMS and Leaflet draws the map. The analysis is a public API (`POST /analyze`) that streams results as Server-Sent Events, with the market ranking as its own section. There are 39 automated tests. Code: https://github.com/harsh2274/crop_recommendation_system
+Twilio handles the SMS and Leaflet draws the map. The analysis is a public API (`POST /analyze`) that streams results as Server-Sent Events, with the market ranking as its own section. PDFs are drawn with pdf-lib inside the Worker. There are 56 automated tests. Code: https://github.com/harsh2274/crop_recommendation_system
 
 Screenshot: *(add link)*
 

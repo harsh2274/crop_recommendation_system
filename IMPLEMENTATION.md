@@ -14,7 +14,7 @@ A single Cloudflare Worker in TypeScript, with two runtime dependencies (`proj4`
 ## File map
 ```
 src/
-  index.ts            HTTP: POST /analyze (SSE or ?format=json) · POST /sms (Twilio) · GET|POST /map/:farmer/:token
+  index.ts            HTTP: POST /analyze (SSE or ?format=json) · POST /sms (Twilio) · GET|POST /map/:farmer/:token · GET /report/:farmer/:token[/pdf]
   env.ts              Bindings and secrets
   pipeline.ts         Orchestrator: startFetches (parallel, cached; also used by prefetch), section order,
                       rotation fallback (farmer > CDL > current crop > best crop), robustness re-runs,
@@ -25,7 +25,7 @@ src/
   climate.ts          Station correction, season years (N/S), current-climate baseline, Penman-Monteith ET0,
                       frost, GDD, monthly table, extremes, trends
   land.ts             Soil summary (texture, AWC, K, drainage), RUSLE LS, NDVI summary + observed season
-  crops.ts            Crop catalog (18 crops, variety GDD ranges) + name resolution
+  crops.ts            Crop catalog (19 crops incl. paddy rice, variety GDD ranges) + name resolution
   simulate.ts         Crop × season replay: sowing rules incl. rainfall onset, soil-water bucket, variety choice
   pests.ts            Degree-day pest scouting calendar
   market/
@@ -50,11 +50,15 @@ src/
     session.ts        FarmerSession Agent: queued turns, reply assembly (translate + code-appended link), analysis, prefetch, RESET
     flow.ts           Conversation state machine and texts; understand() (model -> validated fields); parseDirect(); apply()
     facts.ts          Report messages and follow-up answer snippets written from the result
-    ai.ts             Workers AI: extract() (structured output) and translate() (number-checked, English fallback)
+    ai.ts             Workers AI: extract() (structured output) and translate() (checked; one retry on a second model; English fallback)
     profile.ts        FarmerProfile, required fields, boundary validation, profile → pipeline input
-    mappage.ts        Boundary-drawing page (Leaflet + Esri imagery), translatable texts
+    mappage.ts        Boundary-drawing page (Leaflet + Esri imagery), translatable texts (icons added by the page)
+  report/
+    content.ts        PDF report content from the result (text, tables, chart data) + translation
+    pdf.ts            PDF drawing with pdf-lib: layout, charts, satellite map with the farm outline
+    page.ts           Page the PDF link opens (view + download)
     twilio.ts         Signature verification, outbound SMS
-test/                 geo-input · pipeline (stubbed APIs) · methods (Penman-Monteith, rotation inference) · sms · sms-flow (translation guard, facts, flow)
+test/                 geo-input · pipeline (stubbed APIs) · methods (Penman-Monteith, rotation inference) · sms · sms-flow (translation guard, facts, flow) · market · report (PDF content and rendering)
 public/               demo page served as static assets: index.html, style.css, app.js (draw a field, stream /analyze)
 examples/             sample-input.json (Iowa field, UTM 15N) and its live sample-output.json
 ```
@@ -76,7 +80,7 @@ Dependency direction: `index → {pipeline, sms} → analysis modules → source
 
 **Limits checked:**
 - **Subrequests per analysis:** POWER 1, NOAA 2, soil 1–2, SRTM 1, MODIS ≈ 9, CDL 8, EONET 1 (≈ 24), plus KV operations.
-- **CPU:** measured at about 45–50 ms per uncached analysis (POWER parsing, 18 crops × 20 seasons with variety search, 8 robustness re-runs). That's above the free plan's 10 ms, so use **Workers Paid** (30 s), which is free for 12 months for US students.
+- **CPU:** measured at about 45–50 ms per uncached analysis (POWER parsing, 19 crops × 20 seasons with variety search, 8 robustness re-runs). That's above the free plan's 10 ms, so use **Workers Paid** (30 s), which is free for 12 months for US students.
 
 ## Local development
 ```bash

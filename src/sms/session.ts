@@ -7,6 +7,7 @@
 // links are appended by code after translation.
 import { Agent } from "agents";
 import type { Env } from "../env";
+import { buildReport, localizeReport, type ReportDoc } from "../report/content";
 import type { PipelineOutput } from "../types";
 import { translate } from "./ai";
 import { factSnippets, marketMessages, reportMessages } from "./facts";
@@ -18,8 +19,11 @@ import { sendSms } from "./twilio";
 interface FarmerState { profile: FarmerProfile | null }
 type TurnItem = { kind: "sms"; text: string } | { kind: "boundary"; areaHa: number };
 interface MapLink { token: string; ui: MapUi; language?: string | null; createdAt: number } // language the page texts are in
+interface PdfReport { token: string; createdAt: number; generatedAt: string; language: string | null; doc: ReportDoc } // language asked for
 
 const LINK_TTL_MS = 72 * 3600_000;
+const PDF_TTL_MS = 30 * 24 * 3600_000;
+const SMS_GAP_MS = 1500; // between consecutive texts, so carriers deliver a series in order
 const NO_RETRY = { retry: { maxAttempts: 1 } }; // a retried turn would text the farmer twice
 const OPT_OUT = /^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i; // Twilio opt-out keywords: Twilio handles them
 
@@ -67,6 +71,12 @@ export class FarmerSession extends Agent<Env, FarmerState> {
     return { ok: true as const, areaHa: check.areaHa };
   }
 
+  /** The translated report document behind a PDF link, or null if the link is unknown or expired. */
+  async reportDoc(token: string): Promise<ReportDoc | null> {
+    const pdf = await this.ctx.storage.get<PdfReport>("pdfReport");
+    return pdf && pdf.token === token && Date.now() - pdf.createdAt < PDF_TTL_MS ? pdf.doc : null;
+  }
+
   // ------------------------------------------------------------ queued work
 
   /** One turn (queue callback). Builds the reply from code-written texts only. Never throws. */
@@ -85,6 +95,8 @@ export class FarmerSession extends Agent<Env, FarmerState> {
       const snippets = result ? factSnippets(result) : [];
       const step = nextStep(p);
       const firstContact = !p.language && p.crops.length === 0;
+      const offered = p.pdfOffered; // only the turn right after the offer can accept it with YES
+      p.pdfOffered = false;
 
       let u: Understanding = emptyUnderstanding();
       const direct = parseDirect(step, item.text);
@@ -99,6 +111,7 @@ export class FarmerSession extends Agent<Env, FarmerState> {
       let start = false;
       let withLink = false;
       let extra: string[] = []; // additional messages sent after the reply (market answer)
+      let url: string | null = null; // PDF report link, appended by code
       const next = nextStep(p);
       if (p.analysisStatus === "running") {
         parts.push(u.intent === "resend_link" ? TEXT.redrawLater : TEXT.busy);
@@ -106,6 +119,13 @@ export class FarmerSession extends Agent<Env, FarmerState> {
         // Link requested (to mark, fix or redraw the farm). The flow continues when the new shape arrives.
         parts.push(p.boundary ? TEXT.redraw : question("map", p));
         withLink = true;
+      } else if (u.intent === "pdf_report" || (u.intent === "yes" && offered && next === "done" && result)) {
+        // The complete report as a PDF (offered as the last report text): a link to a page that holds it.
+        if (result) {
+          parts.push(TEXT.pdfLink);
+          url = await this.pdfLink(p, result);
+        } else parts.push(TEXT.answerLater);
+        if (next !== "done") parts.push(question(next, p));
       } else if (u.intent === "market") {
         // "How / where / when should I sell?": market texts written from result.market, sent as separate messages.
         const market = result ? marketMessages(result) : null;
@@ -132,7 +152,7 @@ export class FarmerSession extends Agent<Env, FarmerState> {
       if (start) status = "running";
       this.commit(p, status);
       if (extra.length) for (const m of await translate(this.env, p.language, extra)) await this.text(p.phone, m);
-      if (parts.some(Boolean) || withLink) await this.reply(p, parts, withLink || (nextStep(p) === "map" && !p.boundary));
+      if (parts.some(Boolean) || withLink) await this.reply(p, parts, withLink || (nextStep(p) === "map" && !p.boundary), url);
       // The analysis takes ~1 min: detach it so the queue stays free for the farmer's next message.
       if (start) this.ctx.waitUntil(this.keepAliveWhile(() => this.analyze(p)));
     } catch (e) {
@@ -151,11 +171,14 @@ export class FarmerSession extends Agent<Env, FarmerState> {
       if (!res.ok) throw new Error(`analysis HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
       const result = (await res.json()) as PipelineOutput;
       if (!sameFarmer()) return; // the farmer reset during the analysis: drop the old report
-      await this.ctx.storage.put("result", result);
+      await this.ctx.storage.put({ result, resultRing: p.boundary?.ring ?? [] }); // the shape this report is for (PDF map)
+      await this.ctx.storage.delete("pdfReport");
       // If the farm was redrawn while we calculated, this report is for the old shape: offer a new one.
       const redrawn = this.state.profile?.boundary?.savedAt !== shape;
       this.setStatus(redrawn ? "stale" : "done");
-      for (const m of await translate(this.env, p.language, reportMessages(result))) await this.text(p.phone, m);
+      // The report texts, then the offer of the complete PDF report as the last text of the series.
+      for (const m of await translate(this.env, p.language, [...reportMessages(result), TEXT.pdfOffer])) await this.text(p.phone, m);
+      if (sameFarmer()) this.setState({ profile: { ...this.state.profile!, pdfOffered: true } });
       if (redrawn) await this.reply(p, [TEXT.shapeChanged], false);
     } catch (e) {
       console.error("analysis failed", e);
@@ -188,29 +211,55 @@ export class FarmerSession extends Agent<Env, FarmerState> {
    * Translate code-written parts into the farmer's language (one model call; the map-page texts ride
    * along in the same call when the link needs them), append the map link (code) if needed, send.
    */
-  private async reply(p: FarmerProfile, parts: (string | null)[], withLink: boolean): Promise<void> {
+  private async reply(p: FarmerProfile, parts: (string | null)[], withLink: boolean, extraUrl: string | null = null): Promise<void> {
     const english = parts.filter((x): x is string => !!x);
     const link = withLink ? await this.currentLink() : null;
     const needUi = !!link && link.language !== p.language;
     const localized = await translate(this.env, p.language, [...english, ...(needUi ? MAP_UI_KEYS.map((k) => MAP_UI_DEFAULTS[k]) : [])]);
     if (link && needUi) await this.saveLinkTexts(link, p, localized.slice(english.length));
-    const url = link ? `\n${await this.linkUrl(link)}` : "";
+    const url = (link ? `\n${await this.linkUrl(link)}` : "") + (extraUrl ? `\n${extraUrl}` : "");
     await this.text(p.phone, localized.slice(0, english.length).join(" ") + url);
   }
 
   private async reset(p: FarmerProfile): Promise<void> {
     const [bye] = await translate(this.env, p.language, [TEXT.reset]);
-    await this.ctx.storage.delete(["result", "mapLink"]);
+    await this.ctx.storage.delete(["result", "resultRing", "mapLink", "pdfReport"]);
     this.setState({ profile: newProfile(p.phone) });
     await this.text(p.phone, bye);
   }
 
-  private async text(to: string, body: string): Promise<void> {
-    try {
-      await sendSms(this.env, to, body);
-    } catch (e) {
-      console.error("sms send failed", e);
+  private sending: Promise<void> = Promise.resolve();
+  private lastSent = 0;
+
+  /** Send one text. Texts go out one at a time, SMS_GAP_MS apart (turns and the detached analysis share this). */
+  private text(to: string, body: string): Promise<void> {
+    const send = async () => {
+      const wait = this.lastSent + SMS_GAP_MS - Date.now();
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      try {
+        await sendSms(this.env, to, body);
+      } catch (e) {
+        console.error("sms send failed", e);
+      } finally {
+        this.lastSent = Date.now();
+      }
+    };
+    this.sending = this.sending.then(send);
+    return this.sending;
+  }
+
+  /** Link to the PDF report of `result`; the document is built and translated once per result and language. */
+  private async pdfLink(p: FarmerProfile, result: PipelineOutput): Promise<string> {
+    let pdf = await this.ctx.storage.get<PdfReport>("pdfReport");
+    const fresh = pdf && pdf.generatedAt === result.generatedAt && pdf.language === p.language && Date.now() - pdf.createdAt < PDF_TTL_MS;
+    if (!pdf || !fresh) {
+      if (p.language && !/^english\b/i.test(p.language)) await this.reply(p, [TEXT.pdfPreparing], false); // translating takes a few seconds
+      const ring = (await this.ctx.storage.get<[number, number][]>("resultRing")) ?? p.boundary?.ring ?? [];
+      const doc = await localizeReport(this.env, p.language, buildReport(result, ring));
+      pdf = { token: crypto.randomUUID().replace(/-/g, ""), createdAt: Date.now(), generatedAt: result.generatedAt, language: p.language, doc };
+      await this.ctx.storage.put("pdfReport", pdf);
     }
+    return `${await this.ctx.storage.get<string>("origin")}/report/${this.name}/${pdf.token}`;
   }
 
   /** The farmer's valid map link (a new one when missing or expired). */

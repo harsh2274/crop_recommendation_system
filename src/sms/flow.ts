@@ -13,7 +13,7 @@ const STAGES = ["just planted", "growing", "flowering", "ready to harvest", "har
 const WATER = ["none", "limited", "full"] as const;
 const PRIORITY_CHOICES: Priority[] = ["income", "water", "soil", "pests", "weather"];
 const PRIORITY_WORDS: Record<Priority, string> = { income: "more income", water: "saving water", soil: "healthier soil", pests: "fewer pests", weather: "less weather risk", erosion: "less soil washing away" };
-const WATER_WORDS = { none: "rain only", limited: "some irrigation", full: "enough irrigation" } as const;
+export const WATER_WORDS = { none: "rain only", limited: "some irrigation", full: "enough irrigation" } as const;
 
 export const TEXT = {
   intro: "Hello! I am Farm Helper. I use NASA satellite and weather data to help you plan your crops.",
@@ -24,13 +24,16 @@ export const TEXT = {
   answerLater: "I can answer questions once your farm report is ready.",
   noInfo: "I do not have that information in your farm report. A local farm advisor can help with that question.",
   noMarket: "I do not have market prices for your crops yet. Ask nearby grain elevators, cooperatives or processors for their prices and compare them before you sell.",
-  askMore: "You can ask me about your crops, the suggested plan, dangers, pests, soil or weather. Reply NEW to make a new report.",
+  askMore: "You can ask me about your crops, the suggested plan, dangers, pests, soil or weather. Reply PDF for the complete report, or NEW to make a new report.",
   failed: "Sorry, I could not finish your farm report because of a problem on our side. Please reply YES later to try again.",
   reset: "Your information was deleted. Send any message to start again.",
   turnFailed: "Sorry, something went wrong on our side. Please send your message again.",
   redraw: "Here is your map link again. Draw your farm again and press Continue: I will use the new shape. If you do not need to change it, just answer my last question.",
   redrawLater: "I am calculating your farm report now. After it arrives, reply LINK if you want to redraw your farm.",
   shapeChanged: "Your farm shape changed while I was calculating, so this report is for the old shape. Reply YES to make a new report with the new shape.",
+  pdfOffer: "Would you like a complete report as a PDF, with a map of your farm, charts and all the results? Reply YES or PDF and I will send you a link.",
+  pdfPreparing: "I am preparing your complete report now. The link will arrive in a moment.",
+  pdfLink: "Here is your complete farm report. Open the link to see it and download the PDF:",
   boundary: (ha: number) => `Thank you! I received your farm: ${farmSize(ha)}.`,
 };
 
@@ -75,7 +78,7 @@ function summary(p: FarmerProfile): string {
 
 export interface Understanding {
   language: string;
-  intent: "answer" | "dont_know" | "yes" | "no" | "question" | "resend_link" | "new_report" | "report_outcome" | "market" | "other";
+  intent: "answer" | "dont_know" | "yes" | "no" | "question" | "resend_link" | "new_report" | "report_outcome" | "market" | "pdf_report" | "other";
   crops: string[];
   pastCrops: string[];
   growthStage: string;
@@ -87,14 +90,14 @@ export interface Understanding {
 }
 
 const EMPTY: Understanding = { language: "", intent: "other", crops: [], pastCrops: [], growthStage: "", plantingDate: "", issues: [], irrigation: "", priorities: [], topics: [] };
-const INTENTS = ["answer", "dont_know", "yes", "no", "question", "resend_link", "new_report", "report_outcome", "market", "other"] as const;
+const INTENTS = ["answer", "dont_know", "yes", "no", "question", "resend_link", "new_report", "report_outcome", "market", "pdf_report", "other"] as const;
 
 export async function understand(env: Env, p: FarmerProfile, step: Step, text: string, snippets: Snippet[]): Promise<Understanding> {
   const system = [
     "You read one text message from a farmer and record only what it explicitly says. Never guess or add information. Leave a field empty when the message does not state it.",
-    `The farmer was just asked: ${JSON.stringify(question(step, p) ?? "nothing in particular")}`,
+    `The farmer was just asked: ${JSON.stringify(question(step, p) ?? (p.pdfOffered ? TEXT.pdfOffer : "nothing in particular"))}`,
     "language: the language the message is written in, as an English name (e.g. Spanish).",
-    "intent: answer (gives information), dont_know, yes, no, question (asks something), resend_link (asks for the map link, says the link does not work, or wants to mark, fix, change or redraw the farm boundary or field shape), new_report (wants a new report), market (asks how, where or when to sell, about crop prices, buyers, markets or which crop earns the most money), report_outcome (tells how a past season or harvest went), other.",
+    "intent: answer (gives information), dont_know, yes, no, question (asks something), resend_link (asks for the map link, says the link does not work, or wants to mark, fix, change or redraw the farm boundary or field shape), new_report (wants a new report), market (asks how, where or when to sell, about crop prices, buyers, markets or which crop earns the most money), pdf_report (wants the complete or full report, a PDF, or a document to download or print), report_outcome (tells how a past season or harvest went), other.",
     "crops: crops grown on this field NOW, as English common names (e.g. maiz -> corn). pastCrops: crops of past years, oldest first, English names.",
     `growthStage: one of ${STAGES.join(", ")}. plantingDate: YYYY-MM-DD only if a full date is given. issues: problems the farmer sees, short English phrases.`,
     `irrigation: none (rain only), limited, or full. priorities: any of ${PRIORITIES.join(", ")}.`,
@@ -144,6 +147,7 @@ export function parseDirect(step: Step, text: string): Partial<Understanding> | 
   const t = text.trim();
   if (LINK_WORDS.test(t)) return { intent: "resend_link" };
   if (MARKET_WORDS.test(t)) return { intent: "market" };
+  if (PDF_WORDS.test(t)) return { intent: "pdf_report" };
   if (/^new$/i.test(t)) return { intent: "new_report" };
   if (YES_WORDS.test(t)) return { intent: "yes" };
   if (NO_WORDS.test(t)) return { intent: "no" };
@@ -159,6 +163,9 @@ export function parseDirect(step: Step, text: string): Partial<Understanding> | 
 // One-word market questions in common languages.
 const MARKET_WORDS = /^(sell|selling|price|prices|market|markets|vender|venta|precio|precios|mercado|vendre|prix|marché|verkaufen|preis|preise|vendere|prezzo|preço|mercado)[?.!]*$/i;
 
+// "PDF", "the pdf", "pdf please" (in a few languages).
+const PDF_WORDS = /^(the |el |la |le |o |das |il )?pdf( please| por favor| s'il vous plaît| svp| bitte| per favore)?[.!?]*$/i;
+
 const LINK_WORDS = /^(link|map|redraw|enlace|mapa|liga|lien|carte|karte|mappa|ligação|ссылка|карта|地图|链接|मानचित्र|लिंक|خريطة|رابط)[.!?]*$/i;
 
 // One-word yes/no in common languages, so confirming never depends on the model.
@@ -172,7 +179,9 @@ export function apply(p: FarmerProfile, step: Step, u: Understanding, rawText: s
   const facts = () => JSON.stringify([p.crops, p.pastCrops, p.growthStage, p.plantingDate, p.issues, p.irrigation, p.priorities]);
   const before = facts();
   // Reply in the language of the latest written message; short replies ("YES", "ok", "3") keep the current one.
-  if (u.language && (!p.language || rawText.trim().split(/\s+/).length >= 3)) p.language = u.language;
+  // A message without Latin letters is never English (the model sometimes says so for Hindi).
+  const notEnglish = /^english\b/i.test(u.language) && !/[A-Za-z]/.test(rawText);
+  if (u.language && !notEnglish && (!p.language || rawText.trim().split(/\s+/).length >= 3)) p.language = u.language;
   if (u.crops.length) p.crops = u.crops;
   if (u.pastCrops.length) {
     p.pastCrops = u.pastCrops;

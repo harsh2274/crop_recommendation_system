@@ -8,6 +8,7 @@ Farmers text a phone number in their own language. The assistant asks a few simp
    - frost, heat, drought at flowering, waterlogging, erosion, disease, pest cycles, soil limits, nearby fires/floods and long-term trends
    - a pest-scouting calendar
 4. **Market potential, on request**: when the farmer asks how, where or when to sell, the crops that fit their field ranked by value per hectare after harvest (sold right away or stored until prices usually peak), harvest-month price ranges, US supply signals and where to sell.
+5. **Complete report as a PDF, on request**: the last report text offers it; the link opens a page with a PDF of the satellite map of the farm, charts and every result, to view and download.
 
 **No hallucinated facts:** every number, date, link and recommendation the farmer reads is written by code from the data. The language model only reads the farmer's replies into fields and translates code-written text; a translation that changes any number is rejected. It supports, and does not replace, farmer judgment and local expertise.
 
@@ -19,6 +20,7 @@ Farmers text a phone number in their own language. The assistant asks a few simp
 | Analysis API | `POST /analyze` (streams results) · `POST /analyze?format=json` (one JSON result) |
 | SMS webhook (Twilio) | `POST /sms` (only accepts Twilio-signed requests) |
 | Farm-drawing page | `/map/<farmer>/<token>`, sent to the farmer by text |
+| PDF report page | `/report/<farmer>/<token>` (PDF at `/report/<farmer>/<token>/pdf`), sent when the farmer asks for the complete report |
 | Service phone number | the Twilio number whose SMS webhook points at `/sms` (see the Twilio console of the account that owns it) |
 
 ## Try it in two minutes
@@ -53,7 +55,8 @@ The conversation is a fixed sequence. One question at a time:
 | Farmer sends | What happens |
 |---|---|
 | Anything, in any language | The reply comes in that language (the language of the latest written message) |
-| `YES` (sí, oui, ja…) at the summary | The report starts: 4 texts about a minute later |
+| `YES` (sí, oui, ja…) at the summary | The report starts: 4 texts about a minute later, then a fifth asking if they want the complete report as a PDF |
+| `YES` right after that offer, `PDF`, "send me the full report" | A link to a page with the PDF report (satellite map of the farm, charts, every result, the texts) to view and download |
 | `LINK`, "send the map again", "I drew the wrong field" | The map link is resent; a new drawing replaces the old one |
 | "How and where should I sell my crops?", "When should I sell my corn?", `sell` / `precio` / `mercado`… | 4 market texts: which crops pay the most after harvest (value per hectare, at harvest or stored), prices at harvest, best month to sell, where to sell |
 | A question ("why sunflower?", "when do I plant corn?") | An answer picked from pre-written facts of their report, or "I do not have that information" |
@@ -160,8 +163,9 @@ twilio phone-numbers:update <SERVICE_NUMBER> --sms-url https://<your-worker>.wor
 |---|---|
 | A report takes ~40 s | NASA's MODIS service (ORNL) is slow or down; the pipeline waits at most 40 s, continues without NDVI, and caches the result when it arrives |
 | `/sms` returns 403 | Webhook signature mismatch: the `TWILIO_AUTH_TOKEN` secret must belong to the Twilio account that owns the number, and the webhook URL must be the deployed `workers.dev` URL |
-| "I do not have market prices for your crops yet" | D1 is empty or the crop isn't priced (only corn, soybean, wheat): run `/admin/ingest` |
-| A reply arrives in English instead of the farmer's language | The translation failed the number check, so the original English was sent (by design) |
+| "I do not have market prices for your crops yet" | D1 is empty or the crop isn't priced (only corn, soybean, wheat and rice): run `/admin/ingest` |
+| A reply arrives in English instead of the farmer's language | The translation failed a check (numbers, garbled characters, echo) on both models, so the original English was sent (by design); `wrangler tail` shows which check |
+| The PDF is in English for a Hindi (or other non-Latin script) farmer | By design: the PDF font draws Latin scripts only; the report page and all texts stay in the farmer's language and say so |
 | `wrangler dev` fails with a workers.dev subdomain error | Register a subdomain once in the Cloudflare dashboard (Workers → onboarding) |
 | "CPU time exceeded" | The account is on the free plan; switch to Workers Paid |
 

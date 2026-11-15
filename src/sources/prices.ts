@@ -9,6 +9,7 @@ export const PRICE_SERIES: Record<string, string> = {
   corn: "IMF/PCPS/M.W00.PMAIZMT.USD", // Maize, US No.2 Yellow, FOB Gulf of Mexico
   soybean: "IMF/PCPS/M.W00.PSOYB.USD", // Soybeans, US No.1 Yellow, CIF Rotterdam
   winter_wheat: "IMF/PCPS/M.W00.PWHEAMT.USD", // Wheat, No.1 Hard Red Winter, FOB Gulf of Mexico
+  rice: "IMF/PCPS/M.W00.PRICENPQ.USD", // Rice, Thai 5% broken, milled, export price
 };
 export const CPI_SERIES = "BLS/cu/CUUR0000SA0";
 

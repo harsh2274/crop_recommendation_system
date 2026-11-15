@@ -13,7 +13,7 @@ const SUPPLY_HISTORY = 20; // years of stocks-to-use to judge "usual"
 const BUSHELS_PER_TONNE: Record<string, number> = { corn: 39.368, soybean: 36.744, winter_wheat: 36.744 }; // 56 / 60 / 60 lb bushels
 const BASIS = "IMF world benchmark price (via DBnomics), adjusted with US CPI";
 
-interface SupplyYear { production?: number; exports?: number; consumption?: number; endingStocks?: number; yieldTHa?: number }
+interface SupplyYear { production?: number; roughProduction?: number; exports?: number; consumption?: number; endingStocks?: number; yieldTHa?: number }
 
 export interface MarketData {
   prices: Map<string, Map<string, number>>; // cropId -> YYYY-MM -> nominal USD/t
@@ -118,8 +118,13 @@ function trendSlope(values: number[]): number {
   return sxx ? xs.reduce((a, x, i) => a + (x - mx) * (values[i] - my), 0) / sxx : 0;
 }
 
+/**
+ * US national yield, median of the last 5 years, in the unit the price is quoted in. Rice: PSD reports yield as rough
+ * (paddy) rice but prices milled rice, so the yield is converted with that year's milled / rough production ratio.
+ */
 function medianYield(data: MarketData, cropId: string): number | null {
-  const ys = [...(data.supply.get(cropId)?.entries() ?? [])].sort((a, b) => a[0] - b[0]).flatMap(([, s]) => (s.yieldTHa ? [s.yieldTHa] : [])).slice(-5);
+  const ys = [...(data.supply.get(cropId)?.entries() ?? [])].sort((a, b) => a[0] - b[0])
+    .flatMap(([, s]) => (s.yieldTHa ? [s.roughProduction && s.production ? (s.yieldTHa * s.production) / s.roughProduction : s.yieldTHa] : [])).slice(-5);
   return ys.length ? percentile(ys, 0.5) : null;
 }
 
@@ -210,6 +215,7 @@ export function buildMarket(data: MarketData, input: MarketInput): MarketSection
       `Price history through ${pricesThrough}, in ${dollarsOf} US dollars.`,
       "Prices are world benchmark prices; prices at your local buyer differ by transport, quality and season (basis).",
       "Revenue is before costs, using the US national yield and this field's season-fit probability.",
+      ...(crops.some((m) => m.cropId === "rice") ? ["Rice: price of milled export rice (Thai 5% broken); the yield is converted to milled rice with the US milling ratio. Paddy sold straight from the farm gets less."] : []),
       ...(noData.length ? [`No market data yet for: ${noData.join(", ")}.`] : []),
       ...(missing.length ? [`Too little price history for: ${missing.join(", ")}.`] : []),
     ],

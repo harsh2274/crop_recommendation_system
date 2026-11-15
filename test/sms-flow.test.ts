@@ -37,6 +37,59 @@ describe("translation guard", () => {
   });
 });
 
+describe("language and the PDF offer", () => {
+  it("a Hindi message never switches the reply language to English", () => {
+    const p = { ...newProfile("+1"), language: "Hindi" };
+    apply(p, "done", { ...emptyUnderstanding(), language: "English", intent: "market" }, "मुझे अपनी फसल कहाँ और कब बेचनी चाहिए?");
+    expect(p.language).toBe("Hindi");
+    apply(p, "done", { ...emptyUnderstanding(), language: "English", intent: "question" }, "Where should I sell my crops?");
+    expect(p.language).toBe("English"); // a real English message still switches
+  });
+  it("new profiles start without a pending PDF offer", () => {
+    expect(newProfile("+1").pdfOffered).toBe(false);
+  });
+});
+
+/** Fake Workers AI whose answer depends on the model (main model vs fallback). */
+const modelEnv = (fn: (texts: string[], model: string) => string[]): Env =>
+  ({
+    AI: {
+      run: async (model: string, body: { messages: { content: string }[] }) => {
+        const texts = JSON.parse(body.messages[1].content).messages as string[];
+        return { choices: [{ message: { tool_calls: [{ function: { arguments: JSON.stringify({ translations: fn(texts, model) }) } }] } }] };
+      },
+    },
+  }) as unknown as Env;
+
+describe("translation guard: garbled, echoed and JSON output (seen with Hindi)", () => {
+  const src = ["These are suggestions from satellite data.", "It reached harvest in 9 of 10 years."];
+  const hindi = ["ये उपग्रह डेटा से सुझाव हैं।", "यह 10 में से 9 वर्षों में कटाई तक पहुँची।"];
+
+  it("retries each rejected message on its own with the fallback model", async () => {
+    const calls: string[][] = [];
+    const out = await translate(modelEnv((texts, model) => {
+      calls.push(texts);
+      return model.includes("mistral") ? ["ये उपग्रह डेटा से सु��ाव हैं।", hindi[1]] : [hindi[0]];
+    }), "Hindi", src);
+    expect(out).toEqual(hindi);
+    expect(calls).toEqual([src, [src[0]]]); // one batch, then only the garbled message
+  });
+  it("never sends a garbled character, an echo of the English, or JSON", async () => {
+    for (const bad of ["सु��ाव 9 10", src[1], `{"translations": ["${hindi[1]}", "x"]}`]) {
+      const out = await translate(modelEnv(() => [bad, bad]), "Hindi", [src[1]]);
+      expect(out[0]).toBe(src[1]); // English source, never the bad output
+    }
+  });
+  it("writes native digits as Western digits, so the number check sees the same numbers", async () => {
+    const out = await translate(modelEnv(() => ["यह १० में से ९ वर्षों में कटाई तक पहुँची।"]), "Hindi", [src[1]]);
+    expect(out[0]).toBe(hindi[1]);
+  });
+  it("unwraps a translation the model wrapped in JSON", async () => {
+    const out = await translate(modelEnv(() => [JSON.stringify({ translations: [hindi[1]] })]), "Hindi", [src[1]]);
+    expect(out[0]).toBe(hindi[1]);
+  });
+});
+
 describe("report texts are built from the result only", () => {
   const messages = reportMessages(result);
 
@@ -139,5 +192,17 @@ describe("review fixes", () => {
     expect(rotationOf(p)).toEqual(["soybean", "corn"]);
     p.crops = ["wheat"]; // farmer corrects the current crop
     expect(rotationOf(p)).toEqual(["soybean", "wheat"]);
+  });
+});
+
+describe("crops from the teammate's test (maize + barley, past wheat + rice)", () => {
+  it("keeps past crops that differ from the current ones", async () => {
+    const { normalizeRotation } = await import("../src/sms/profile");
+    expect(normalizeRotation(["wheat", "rice"], ["maize", "barley"])).toEqual(["wheat", "rice", "maize", "barley"]);
+    expect(normalizeRotation(["corn", "soybeans", "corn"], ["corn", "soybeans"])).toEqual(["corn", "soybeans"]);
+  });
+  it("says Corn (maize), so a farmer who wrote maize sees their word", () => {
+    expect(reportMessages(result)[0]).toContain("Corn (maize)");
+    expect(reportMessages(result).join(" ")).not.toMatch(/\(cover\)/);
   });
 });

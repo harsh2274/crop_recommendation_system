@@ -20,6 +20,9 @@ const STRESS_KS = 0.7; // Ks below this = a water-stress day
 const FLOWERING = [0.45, 0.65] as const; // share of the season around flowering
 // rainfall onset: >= 20 mm in 3 days, then no 10-day dry spell in the next 30 days
 const ONSET_RAIN_MM = 20, ONSET_DRY_SPELL = 10, ONSET_CHECK_DAYS = 30;
+// paddy rice (FAO Irrigation Water Management, Training Manual 3, values for the heavy soils rice is grown on):
+// water to soak the field and set up the flood before planting, daily percolation, and rain the bunds can hold
+const PADDY_PREP_MM = 200, PADDY_PERCOLATION_MM = 3, PADDY_POND_MM = 100;
 
 export type SowingRule = CropSuitability["sowingRule"];
 
@@ -113,6 +116,13 @@ function runSeasons(crop: Crop, climate: ClimateData, soil: SoilSummary, plan: {
     }
     let depletion = pre > 0 ? 0 : 0.5 * taw;
     let gddSum = 0, heat = 0, etc = 0, deficit = 0, killed = false, matured = false, days = 0, k = 0;
+    let pond = 0; // paddy: standing water held by the bunds
+    if (crop.paddy) { // field preparation, partly covered by rain in the 30 days before planting
+      let prepRain = 0;
+      for (let k = -30; k < 0; k++) { const x = day(i, sow + k); if (x) prepRain += x.year.precip[x.d]; }
+      etc += PADDY_PREP_MM;
+      deficit += Math.max(0, PADDY_PREP_MM - prepRain);
+    }
     const ks: number[] = [];
     for (; k < MAX_SEASON_DAYS; k++) {
       const x = day(i, sow + k);
@@ -121,13 +131,23 @@ function runSeasons(crop: Crop, climate: ClimateData, soil: SoilSummary, plan: {
       if (k >= frostSafeDays && year.tmin[d] <= crop.frostKillC) { killed = true; break; }
       if (!matured) {
         if (year.tmax[d] >= crop.heatStressC) heat++;
-        const demand = crop.kc * year.et0[d];
-        const stress = depletion > raw ? Math.max(0, (taw - depletion) / Math.max(1e-6, taw - raw)) : 1; // FAO-56 Ks
-        const actual = stress * demand;
-        depletion = Math.min(taw, Math.max(0, depletion - year.precip[d] + actual)); // excess rain drains away
-        etc += demand;
-        deficit += demand - actual;
-        ks.push(stress);
+        if (crop.paddy) { // flooded field: needs ETc + percolation every day; rain is stored up to the bund height
+          const need = crop.kc * year.et0[d] + PADDY_PERCOLATION_MM;
+          pond = Math.min(PADDY_POND_MM, pond + year.precip[d]);
+          const used = Math.min(pond, need);
+          pond -= used;
+          etc += need;
+          deficit += need - used;
+          ks.push(used / need);
+        } else {
+          const demand = crop.kc * year.et0[d];
+          const stress = depletion > raw ? Math.max(0, (taw - depletion) / Math.max(1e-6, taw - raw)) : 1; // FAO-56 Ks
+          const actual = stress * demand;
+          depletion = Math.min(taw, Math.max(0, depletion - year.precip[d] + actual)); // excess rain drains away
+          etc += demand;
+          deficit += demand - actual;
+          ks.push(stress);
+        }
         gddSum += gdd(year.tmax[d], year.tmin[d], crop.tBaseC);
         if (gddSum >= crop.gddToMaturity) { matured = true; days = k; }
       }

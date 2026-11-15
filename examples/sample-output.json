@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-11-14T22:30:59.000Z",
+  "generatedAt": "2026-11-15T17:09:52.853Z",
   "field": {
     "fieldId": "demo-iowa-001",
     "centroid": {
@@ -117,8 +117,8 @@
       ],
       "spatialResolution": "250 m",
       "temporalCoverage": "2023-present, 16-day",
-      "status": "unavailable",
-      "note": "timed out; the fetch finishes in the background and is cached"
+      "status": "degraded",
+      "note": "3 of 9 MODIS requests failed; some months are missing"
     },
     {
       "id": "soil",
@@ -180,13 +180,13 @@
       "dataset": "IMF world commodity prices + US CPI (via DBnomics)",
       "provider": "IMF / US BLS via DBnomics",
       "variables": [
-        "corn, soybean, wheat USD/t",
+        "corn, soybean, wheat, rice USD/t",
         "CPI-U"
       ],
       "spatialResolution": "world benchmark",
       "temporalCoverage": "1990-latest DBnomics update, monthly",
       "status": "ok",
-      "note": "updated 2026-11-14"
+      "note": "updated 2026-11-15"
     },
     {
       "id": "usda_psd",
@@ -491,7 +491,39 @@
     "drainageClass": "Poorly drained",
     "hydrologicGroup": "C/D"
   },
-  "vegetation": null,
+  "vegetation": {
+    "source": "MODIS MOD13Q1 v061 NDVI (ORNL DAAC)",
+    "years": 3,
+    "pixelsUsed": 1,
+    "monthlyNdvi": [
+      0.191,
+      0.222,
+      0.232,
+      0.276,
+      0.408,
+      0.755,
+      0.902,
+      0.894,
+      0.614,
+      0.333,
+      0.253,
+      0.228
+    ],
+    "bareMonths": [
+      1,
+      2,
+      3,
+      4,
+      11,
+      12
+    ],
+    "peakMonth": 7,
+    "latestSeasonAnomaly": -0.014,
+    "observedSeason": {
+      "greenUp": "06-18",
+      "brownDown": "09-14"
+    }
+  },
   "fieldHistory": [
     {
       "year": 2018,
@@ -964,6 +996,35 @@
       ]
     },
     {
+      "cropId": "rice",
+      "name": "Rice",
+      "family": "Poaceae",
+      "role": "cash",
+      "suitability": 24,
+      "class": "poor",
+      "seasonFitProbability": 0.85,
+      "frostKillProbability": 0.15,
+      "sowingRule": "soil_temperature",
+      "plantingDate": "05-08",
+      "harvestDate": "10-08",
+      "seasonDays": 139,
+      "maturityGdd": 1600,
+      "maturityClass": "medium",
+      "floweringStressDays": 21,
+      "heatStressDays": 2,
+      "waterUseMm": 1299,
+      "irrigationNeedMm": {
+        "median": 763,
+        "p90": 952
+      },
+      "phFit": true,
+      "limitingFactors": [
+        "killing frost before maturity in 15% of years",
+        "59% of crop water demand unmet without (more) irrigation",
+        "21 dry-stress days around flowering in a typical season"
+      ]
+    },
+    {
       "cropId": "crimson_clover",
       "name": "Crimson clover (cover)",
       "family": "Fabaceae",
@@ -1163,9 +1224,7 @@
       "severity": "moderate",
       "likelihood": null,
       "months": [
-        5,
-        6,
-        8
+        4
       ],
       "metrics": {
         "estimatedSoilLossTHaYr": 9.4,
@@ -1536,7 +1595,7 @@
   },
   "market": {
     "basis": "IMF world benchmark price (via DBnomics), adjusted with US CPI to 2025-01 US dollars",
-    "dataUpdated": "2026-11-14T21:51:14.927Z",
+    "dataUpdated": "2026-11-15T17:09:41.190Z",
     "pricesThrough": "2025-06",
     "dollarsOf": "2025-01",
     "crops": [
@@ -1722,7 +1781,7 @@
     "level": "medium",
     "reasons": [
       "Climate statistics use 20 years of daily NASA POWER data.",
-      "MODIS MOD13Q1 v061 NDVI unavailable (timed out; the fetch finishes in the background and is cached).",
+      "MODIS MOD13Q1 v061 NDVI degraded (3 of 9 MODIS requests failed; some months are missing).",
       "Recommendation unchanged in 100% of robustness runs."
     ]
   },

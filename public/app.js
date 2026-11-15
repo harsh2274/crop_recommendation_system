@@ -13,7 +13,7 @@
 
   // ------------------------------------------------------------ form
   const CROPS = [["corn", "Corn"], ["soybean", "Soybean"], ["winter_wheat", "Winter wheat"], ["oats", "Oats"], ["barley", "Barley"], ["sorghum", "Sorghum"],
-    ["sunflower", "Sunflower"], ["canola", "Canola"], ["dry_bean", "Dry bean"], ["field_pea", "Field pea"], ["cotton", "Cotton"], ["potato", "Potato"], ["alfalfa", "Alfalfa"]];
+    ["sunflower", "Sunflower"], ["canola", "Canola"], ["dry_bean", "Dry bean"], ["field_pea", "Field pea"], ["cotton", "Cotton"], ["rice", "Rice"], ["potato", "Potato"], ["alfalfa", "Alfalfa"]];
   const PRIORITIES = [["income", "More income"], ["soilHealth", "Healthier soil"], ["water", "Saving water"], ["pest", "Fewer pests"], ["resilience", "Less weather risk"], ["erosion", "Less erosion"]];
   const cropOrder = ["corn", "soybean"];
   const chosen = new Set(["soilHealth", "income"]);

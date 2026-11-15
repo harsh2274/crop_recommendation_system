@@ -12,8 +12,9 @@ The model **never writes facts**: no links, numbers, dates, recommendations or a
 | What to ask next, and every question text | `flow.ts` state machine | Fixed English texts; the model doesn't choose what to say |
 | Reading the farmer's message | `flow.understand()` → structured fields only | Values validated (enums, dates, crop names resolved against the catalog, the language must be a plain language name); numbered replies, YES/NO, `LINK`, `NEW`, `RESET` parsed by code; everything echoed back in a summary the farmer confirms before any analysis |
 | Answering a question | Model may only **pick snippet ids** from the list | The reply is the snippet text; no match → "I do not have that information…" |
-| Translation | `ai.translate()` | Accepted only if it has the same numbers as the English source (compared by value), no URL, and a plausible length (no added or dropped sentences); otherwise the English original is sent |
-| Links | Code appends the map link after translation | The model never sees or writes a link |
+| Translation | `ai.translate()` | Accepted only if it has the same numbers as the English source (compared by value, native digits such as Devanagari written as Western digits), no URL, no garbled character (U+FFFD), is not the English echoed back or JSON, and has a plausible length (no added or dropped sentences). A rejected message is retried once on its own with a second model (`FALLBACK_MODEL`); if that fails too, the English original is sent |
+| Links | Code appends the map and PDF links after translation | The model never sees or writes a link |
+| PDF report | `src/report/content.ts` builds it from result fields; translated once with the same checks | Charts and tables draw result values only; the map is the farm boundary the farmer drew |
 | Harvest reports | Stored in the farmer's own words | No model summary |
 
 ## Conversation
@@ -31,10 +32,20 @@ understand() → fields → apply() → nextStep() → code-written English text
   8. summary of everything collected → "Reply YES to start the report, or tell me what to change."
   ▼ YES → "I am calculating your farm report now…" → analysis pipeline (same Worker)
   4 report texts (facts.ts): your crops · suggested plan + stability + programs · things to watch + next pest check · advisor note (which also says they can ask which crops sell best and where to sell)
-  ▼
+  5th text: "Would you like a complete report as a PDF…? Reply YES or PDF"
+  ▼ YES (right after the offer) / PDF / "send the full report" → link ──► /report/<farmer>/<token>: the PDF to view and download
 Questions → snippet answers · "how / where / when should I sell?" → market texts · new information → summary again · NEW → new report · RESET → delete profile
 ```
 Every optional question accepts "don't know" or "no" and moves on.
+
+**Message order:** every text goes through one sender per farmer that waits 1.5 s between texts (`SMS_GAP_MS`), so a series (report, market answer) arrives in order on the phone; replies to new messages and the detached analysis share it.
+
+**PDF report:**
+- offered as the last report text; YES counts as "send it" only on the turn right after the offer (`profile.pdfOffered`); `PDF` or "send me the full report" (`pdf_report`) works any time a report exists
+- built once per result and language (`report/content.ts`), translated in parallel batches with the same checks as texts, stored in the farmer's Agent; the link is valid for 30 days and a new report gets a new link
+- contents: satellite map of the farm with its outline and a scale bar (Esri World Imagery export), basic facts, crop fit chart and table, planting calendar (cover crops until spring), plan comparison chart and table, monthly rain/water demand and temperature charts, NASA MODIS greenness by month, dangers, pest checks, market value chart and price table, the report and market texts, data sources, confidence and disclaimer
+- rendered on request in the Worker with `pdf-lib` and cached in KV; the page shows it inline with Open and Download buttons (most phone browsers cannot show a PDF inside a page)
+- language: the page texts are in the farmer's language for any script. The PDF uses the standard Helvetica font, which draws Latin scripts (Spanish, French, Portuguese, Swahili, …); for other scripts (Hindi, Chinese, Arabic, …) the PDF stays in English, is not translated, and the page says so in the farmer's language
 
 **Map link requests** ("LINK", "send the map again", "I drew the wrong field", one-word "map/mapa/enlace/lien/karte…"):
 - before the farm is drawn: the link is resent with the drawing instructions
@@ -68,7 +79,7 @@ Before a report the reply is "I can answer questions once your farm report is re
 ## Code
 | File | Role |
 |---|---|
-| `src/index.ts` | Routes `/sms` (webhook) and `/map/:farmer/:token` (page + submit) |
+| `src/index.ts` | Routes `/sms` (webhook), `/map/:farmer/:token` (page + submit) and `/report/:farmer/:token` (PDF page, `/pdf`) |
 | `src/sms/session.ts` | `FarmerSession` Agent: queued turns, reply assembly (translate + link), analysis, prefetch, RESET |
 | `src/sms/flow.ts` | State machine, all conversation texts, `understand()` (model → validated fields), `parseDirect()` (code), `apply()` |
 | `src/sms/facts.ts` | Report messages and follow-up snippets, written from the result |
@@ -76,8 +87,11 @@ Before a report the reply is "I can answer questions once your farm report is re
 | `src/sms/profile.ts` | `FarmerProfile`, boundary validation, profile → pipeline input |
 | `src/sms/mappage.ts` | Map page HTML (Leaflet + Esri satellite tiles) and its texts |
 | `src/sms/twilio.ts` | Signature verification and outbound SMS (printed to the console when Twilio isn't configured) |
+| `src/report/content.ts` | PDF report content (text, tables, chart data) from the result, and its translation |
+| `src/report/pdf.ts` | PDF drawing (`pdf-lib`): layout, charts, satellite map with the farm outline |
+| `src/report/page.ts` | The page the PDF link opens |
 
-**Model:** Workers AI `@cf/mistralai/mistral-small-3.1-24b-instruct`: about 1.6 s per call with correct structured output and accented Spanish in our benchmark (faster and more reliable than the other function-calling models tested). Each turn makes at most two calls (read the message, translate the reply), and the analysis runs detached from the message queue (`keepAliveWhile`), so a new text is never stuck behind it. Change `MODEL` in `src/sms/ai.ts`.
+**Model:** Workers AI `@cf/mistralai/mistral-small-3.1-24b-instruct`: about 1.6 s per call with correct structured output and accented Spanish in our benchmark (faster and more reliable than the other function-calling models tested). A rejected translation is retried once with `@cf/meta/llama-4-scout-17b-16e-instruct`, one message per call: the main model garbles some Devanagari letters every time (Hindi "सुझाव" comes back with U+FFFD), while Llama 4 Scout translated the same Hindi texts correctly in 6 of 6 single-message calls (~5 s); given several messages in one call it returns only one entry, hence one per call. Each turn makes at most two calls when nothing is rejected (read the message, translate the reply), and the analysis runs detached from the message queue (`keepAliveWhile`), so a new text is never stuck behind it. Change `MODEL` in `src/sms/ai.ts`.
 
 ## Demo setup with the Twilio CLI
 You need two Twilio numbers in the same account:

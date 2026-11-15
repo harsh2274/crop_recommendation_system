@@ -14,7 +14,8 @@ export function dateWords(mmdd: string | null): string {
 }
 
 const monthList = (months: number[]) => months.map((m) => MONTHS[m - 1]).join(", ");
-const cropName = (id: string) => getCrop(id).name.replace(/ \(.*\)$/, "");
+// Keep regional names ("Corn (maize)") so a farmer who wrote "maize" sees their word; drop only cover-crop labels.
+export const cropName = (id: string) => getCrop(id).name.replace(/ \([^)]*cover\)$/, "");
 
 const HAZARD_WORDS: Record<string, string> = {
   frost: "Frost", heat: "Very hot days", drought: "Dry periods", heavy_rain: "Heavy rain and standing water",
@@ -27,7 +28,7 @@ const BENEFIT_WORDS: Record<Exclude<keyof RotationScores, "overall">, string> = 
   soilHealth: "healthier soil", erosion: "less soil washing away", pest: "fewer pest and disease problems", water: "less water needed", resilience: "less weather risk",
 };
 
-function hazardTitle(h: Hazard): string {
+export function hazardTitle(h: Hazard): string {
   return HAZARD_WORDS[h.id] ?? h.title.replace(/^Farmer-reported: /, "What you reported: ");
 }
 
@@ -42,12 +43,13 @@ function cropSentence(r: PipelineOutput, id: string): string {
   ];
   if (c.frostKillProbability >= 0.1) parts.push(`Frost can kill it in about ${Math.round(c.frostKillProbability * 10)} of 10 years.`);
   if (c.heatStressDays >= 5) parts.push(`It gets about ${Math.round(c.heatStressDays)} very hot days in a season.`);
-  if (c.floweringStressDays >= 3) parts.push(`It often lacks water around flowering, about ${Math.round(c.floweringStressDays)} days.`);
+  // (with enough irrigation the farmer supplies that water, so it is not a risk to report)
+  if (c.floweringStressDays >= 3 && r.context.constraints.irrigation !== "full") parts.push(`It often lacks water around flowering, about ${Math.round(c.floweringStressDays)} days.`);
   if (!c.phFit) parts.push("Your soil acidity is outside what it likes.");
   return parts.join(" ");
 }
 
-function planSentence(r: PipelineOutput, id: string): string {
+export function planSentence(r: PipelineOutput, id: string): string {
   const s = r.rotations.find((x) => x.id === id);
   if (!s) return "";
   return s.sequence.map((e) =>
@@ -117,7 +119,7 @@ export function marketMessages(r: PipelineOutput): string[] | null {
   const prices = crops.map((c) => {
     const unit = c.price.usdPerBushel ? "bushel" : "tonne";
     const p = c.price.usdPerBushel ?? c.price.usdPerTonne;
-    return `${cropName(c.cropId)} in ${MONTHS[c.harvestMonth - 1]}: usually ${money(p.p10, true)} to ${money(p.p90, true)} per ${unit}, most often about ${money(p.p50, true)}.`;
+    return `${cropName(c.cropId)}${c.cropId === "rice" ? " (milled rice, export price)" : ""} in ${MONTHS[c.harvestMonth - 1]}: usually ${money(p.p10, true)} to ${money(p.p90, true)} per ${unit}, most often about ${money(p.p50, true)}.`;
   });
 
   const timing = crops.map((c) => {

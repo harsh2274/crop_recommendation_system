@@ -10,7 +10,7 @@ const HISTORY_YEARS = 8;
 
 // CDL class -> catalog crop id (other classes keep cropId null)
 const CDL_TO_CROP: Record<number, string> = {
-  1: "corn", 2: "cotton", 4: "sorghum", 5: "soybean", 6: "sunflower", 21: "barley", 24: "winter_wheat", 27: "cereal_rye",
+  1: "corn", 2: "cotton", 3: "rice", 4: "sorghum", 5: "soybean", 6: "sunflower", 21: "barley", 24: "winter_wheat", 27: "cereal_rye",
   28: "oats", 31: "canola", 36: "alfalfa", 42: "dry_bean", 43: "potato", 53: "field_pea",
 };
 

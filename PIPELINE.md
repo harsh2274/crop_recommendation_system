@@ -18,7 +18,7 @@ How a field polygon becomes crop suitability, a growing cycle, hazards, a pest c
  current-climate         drainage             bare months
  baseline · PM ET0
         ▼
- simulate.ts: 18 crops × 20 seasons, variety choice, rainfall-onset sowing, daily soil-water bucket
+ simulate.ts: 19 crops × 20 seasons, variety choice, rainfall-onset sowing, daily soil-water bucket (paddy water balance for rice)
         ├──► cropSuitability                     pests.ts: degree-day scouting calendar
         ▼
  rotation.ts: current / +cover / diversified / water-wise → day-by-day layout → 5 scores + programs
@@ -83,11 +83,12 @@ For **each catalog crop × each historical season year**:
    - The bucket starts full if P − ET0 over the previous 90 days was positive, otherwise half-depleted.
    - Each day: `Ks = 1` while depletion ≤ RAW, else `(TAW − Dr) / (TAW − RAW)`. Actual ET = `Ks × Kc × ET0`; depletion `Dr = clamp(Dr − P + ETa, 0, TAW)`, with excess rain draining away.
    - Deficit = Σ (ETc − ETa). Flowering stress = days with Ks < 0.7 in the 45–65 % part of the season.
+   - **Paddy rice** (`paddy: true`) is grown flooded, so it gets its own water balance (values for the heavy soils rice is grown on, FAO Irrigation Water Management, Training Manual 3): 200 mm to soak the field and set up the flood before planting, minus rain of the previous 30 days; then each day it needs ETc + 3 mm percolation, met from rain held by the bunds (up to 100 mm of standing water). What rain can't cover is the deficit (the irrigation need), and the daily share met is the stress value for flowering. With rain only, rice therefore shows a large unmet water share and scores low; with enough irrigation the deficit is supplied.
 3. **Day loop** (≤ 330 days):
    - A killing frost (`Tmin ≤ frostKillC`) after `frostSafeDays` ends the season (default 10 days; corn and sorghum 28).
    - Heat days are days with `Tmax ≥ heatStressC`. GDD accumulates to `gddToMaturity`.
    - Overwintering cover crops must also survive to the median last spring frost.
-4. **Variety choice:** for crops with a `gddRange` (corn, soybean, sorghum, sunflower, cotton), the longest variety, in 100 GDD steps, that matures in ≥ 85 % of years is chosen. It's reported as `maturityGdd` and `maturityClass` (early/medium/full).
+4. **Variety choice:** for crops with a `gddRange` (corn, soybean, sorghum, sunflower, cotton, rice), the longest variety, in 100 GDD steps, that matures in ≥ 85 % of years is chosen. It's reported as `maturityGdd` and `maturityClass` (early/medium/full).
 
 Aggregated over years:
 - season-fit and frost-kill probability
@@ -171,14 +172,14 @@ Air temperature stands in for soil temperature (rootworm). A model is omitted wh
 Farmer `observedIssues` are keyword-matched to hazards. A match goes in `corroboratedByFarmer` and raises `low` to `moderate`. Unmatched issues become `farmer_reported_N` hazards for local review.
 
 ## 8. Market (`market/ingest.ts`, `market/engine.ts`)
-**Data (D1, refreshed monthly by a Cron Trigger):** IMF world benchmark prices for corn (US No.2 Yellow, Gulf), soybeans and wheat (HRW, Gulf), US CPI-U (both via DBnomics), and USDA PSD US production, exports, domestic consumption, ending stocks and yield. Field region from the US Census geocoder.
+**Data (D1, refreshed monthly by a Cron Trigger):** IMF world benchmark prices for corn (US No.2 Yellow, Gulf), soybeans, wheat (HRW, Gulf) and rice (Thai 5% broken, milled), US CPI-U (both via DBnomics), and USDA PSD US production, exports, domestic consumption, ending stocks and yield. Field region from the US Census geocoder.
 
 For each priced crop that suits the field (class not poor):
 1. **Harvest-month price:** the crop's price in its harvest month (`cropSuitability.harvestDate`) in each of the last 10 years with data, adjusted to the latest CPI month's dollars. P10/P50/P90 of those values form the range. US crops are also shown per bushel (corn 39.368, soybean and wheat 36.744 bu/t).
 2. **Backtest:** each of the last 5 years is re-forecast from the 10 years before it: P10–P90 coverage, and P50 error vs the naive "same month last year".
 3. **Best month to sell:** the month with the highest 10-year median real price, and its premium over the harvest month.
 4. **Demand signals (USDA PSD):** stocks-to-use = ending stocks / (domestic consumption + exports) in the latest market year (the current USDA projection), compared with the previous 20 years: lower / normal / higher (thirds). Exports trend = OLS slope of the last 10 years relative to their mean (> +1 %/yr rising, < −1 %/yr falling).
-5. **Gross revenue per ha (before costs):** US national yield (median of the last 5 years) × the field's season-fit probability × price range. The same with the best month's median price gives the value if the crop is stored and sold then (`bestMonthRevenuePerHa`); the SMS answer ranks crops by the better of the two ("which crops pay the most after harvest").
+5. **Gross revenue per ha (before costs):** US national yield (median of the last 5 years) × the field's season-fit probability × price range. Rice: PSD reports yield as rough (paddy) rice but the price is for milled rice, so each year's yield is multiplied by that year's milled / rough production (≈ 0.70). The same with the best month's median price gives the value if the crop is stored and sold then (`bestMonthRevenuePerHa`); the SMS answer ranks crops by the better of the two ("which crops pay the most after harvest").
 6. **Market score:** revenue relative to the best candidate × (1 − 0.3 · min(1, (P90 − P10) / P50)).
 7. **Ranking:** `final = (1 − w)·suitability + w·marketScore`, `w = priorities.income / 10`. Rotations are ranked the same way using the mean revenue of their years; a rotation containing an unpriced crop gets no final market score and is listed after the ranked ones.
 
@@ -217,4 +218,4 @@ The SMS assistant texts the market answer only when the farmer asks how, where o
 - **Crop parameters:** variety length is fitted locally; other parameters are generic (see robustness).
 - **RUSLE:** a screening estimate (assumed slope length, simple C factors) for comparing strategies.
 - **US-only data:** SSURGO and CDL; elsewhere soil comes from SoilGrids and there's no field history.
-- **Market:** world benchmark prices, not local buyer prices (basis); revenue before costs; only corn, soybean and wheat are priced; the DBnomics mirror lags the IMF release by months.
+- **Market:** world benchmark prices, not local buyer prices (basis); revenue before costs; only corn, soybean, wheat and rice are priced (rice as milled export rice, so paddy sold at the farm gate gets less); the DBnomics mirror lags the IMF release by months.

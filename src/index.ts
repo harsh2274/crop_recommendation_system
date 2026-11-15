@@ -2,11 +2,16 @@
 //   POST /analyze                  analysis black box: SSE stream (or ?format=json for one JSON result)
 //   POST /sms                      Twilio inbound-SMS webhook -> the farmer's Durable Object
 //   GET|POST /map/:farmer/:token   boundary-drawing page and its submit endpoint
+//   GET /report/:farmer/:token     page holding the farmer's PDF report; /pdf serves the PDF itself
 import { getAgentByName } from "agents";
 import type { Env } from "./env";
 import { InputError } from "./input";
 import { ingestAll } from "./market/ingest";
 import { prefetch, runPipeline, type PipelineEvent } from "./pipeline";
+import type { ReportDoc } from "./report/content";
+import { renderReportPage } from "./report/page";
+import { mapView, renderPdf } from "./report/pdf";
+import { USER_AGENT } from "./sources/http";
 import { renderMapPage, type MapPageConfig } from "./sms/mappage";
 import { emptyTwiml, verifySignature } from "./sms/twilio";
 
@@ -23,6 +28,8 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", ...CORS } });
 
 const MAP_PATH = /^\/map\/([0-9a-f]{64})\/([0-9a-f]{32})$/;
+const REPORT_PATH = /^\/report\/([0-9a-f]{64})\/([0-9a-f]{32})(\/pdf)?$/;
+const PDF_CACHE_TTL_S = 30 * 24 * 3600;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -32,9 +39,11 @@ export default {
     if (url.pathname === "/sms" && request.method === "POST") return sms(request, env, url);
     const map = url.pathname.match(MAP_PATH);
     if (map) return mapPage(request, env, ctx, map[1], map[2]);
+    const report = url.pathname.match(REPORT_PATH);
+    if (report && request.method === "GET") return reportPage(env, url, report[1], report[2], !!report[3]);
     if (url.pathname === "/admin/ingest" && request.method === "POST") return adminIngest(request, env);
     // "/" is the public demo page (static assets); /api describes the API.
-    if (url.pathname === "/api") return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token"], demo: "/" });
+    if (url.pathname === "/api") return json({ service: "farm-rotation-pipeline", endpoints: ["POST /analyze", "POST /sms (Twilio webhook)", "GET /map/:farmer/:token", "GET /report/:farmer/:token"], demo: "/" });
     return json({ error: "Not found", api: "/api" }, 404);
   },
 
@@ -158,4 +167,37 @@ async function mapPage(request: Request, env: Env, ctx: ExecutionContext, farmer
     return json(out, out.ok ? 200 : 400);
   }
   return json({ error: "Use GET or POST" }, 405);
+}
+
+// ------------------------------------------------------------------ PDF report
+
+/** The report page, or the PDF itself (rendered once per link, then served from KV). */
+async function reportPage(env: Env, url: URL, farmerHex: string, token: string, wantPdf: boolean): Promise<Response> {
+  const farmer = await getAgentByName(env.FARMER, farmerHex);
+  const doc = (await farmer.reportDoc(token)) as ReportDoc | null;
+  if (!wantPdf) return renderReportPage(doc, `/report/${farmerHex}/${token}/pdf`);
+  if (!doc) return new Response("This link has expired.", { status: 404 });
+
+  const key = `pdf:${farmerHex}:${token}`;
+  let bytes = (await env.CACHE?.get(key, "arrayBuffer")) ?? null;
+  if (!bytes) {
+    const pdf = await renderPdf(doc, doc.ring.length >= 3 ? await satelliteImage(mapView(doc.ring).url) : null);
+    bytes = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength) as ArrayBuffer;
+    await env.CACHE?.put(key, bytes, { expirationTtl: PDF_CACHE_TTL_S });
+  }
+  const disposition = url.searchParams.has("download") ? "attachment" : "inline";
+  return new Response(bytes, {
+    headers: { "content-type": "application/pdf", "content-disposition": `${disposition}; filename="farm-report.pdf"`, "cache-control": "private, max-age=3600", "x-robots-tag": "noindex" },
+  });
+}
+
+/** Esri World Imagery JPEG for the PDF map, or null (the PDF then shows the outline without imagery). */
+async function satelliteImage(src: string): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch(src, { signal: AbortSignal.timeout(15_000), headers: { "user-agent": USER_AGENT } });
+    if (!res.ok || !(res.headers.get("content-type") ?? "").includes("jpeg")) return null;
+    return new Uint8Array(await res.arrayBuffer());
+  } catch {
+    return null;
+  }
 }

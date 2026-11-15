@@ -8,8 +8,9 @@ export const PSD_COMMODITIES: Record<string, { code: string; file: string }> = {
   corn: { code: "0440000", file: "psd_grains_pulses_csv.zip" },
   winter_wheat: { code: "0410000", file: "psd_grains_pulses_csv.zip" }, // all US wheat
   soybean: { code: "2222000", file: "psd_oilseeds_csv.zip" },
+  rice: { code: "0422110", file: "psd_grains_pulses_csv.zip" }, // "Rice, Milled": tonnes are milled, yield is rough (paddy)
 };
-const ATTRIBUTES: Record<string, string> = { "028": "production", "088": "exports", "125": "consumption", "176": "endingStocks", "184": "yieldTHa" };
+const ATTRIBUTES: Record<string, string> = { "028": "production", "054": "roughProduction", "088": "exports", "125": "consumption", "176": "endingStocks", "184": "yieldTHa" };
 
 export interface PsdRow { cropId: string; marketYear: number; attribute: string; value: number }
 

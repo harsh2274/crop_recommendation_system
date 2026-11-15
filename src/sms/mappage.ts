@@ -4,23 +4,25 @@
 
 export const MAP_UI_DEFAULTS = {
   title: "Mark your farm",
-  findMe: "📍 Find my farm",
+  findMe: "Find my farm",
   locating: "Finding where you are…",
   locationFailed: "Could not find your location. Move the map to your farm.",
   ready: "When you see your farm, press Start drawing.",
-  start: "✏️ Start drawing",
+  start: "Start drawing",
   hint: "Tap each corner of your farm on the map.",
-  redraw: "↺ Redraw",
-  continue: "✓ Continue",
+  redraw: "Redraw",
+  continue: "Continue",
   needMore: "Tap at least 3 corners.",
   crossing: "The lines cross. Please press Redraw and try again.",
   badSize: "That shape looks too small or too big. Please redraw.",
   saving: "Saving…",
   failed: "Something went wrong. Please press Continue again.",
-  done: "✅ We took note of the footprint of your farm. You can close this page now and go back to your text messages: your next question is waiting there.",
+  done: "We took note of the footprint of your farm. You can close this page now and go back to your text messages: your next question is waiting there.",
   expired: "This link has expired. Send us a text message to get a new one.",
 };
 export type MapUi = typeof MAP_UI_DEFAULTS;
+// Icons are added by the page, never sent through translation (models can garble symbols, e.g. into U+FFFD).
+const ICONS: Partial<Record<keyof MapUi, string>> = { findMe: "📍", start: "✏️", redraw: "↺", continue: "✓", done: "✅" };
 export const MAP_UI_KEYS = Object.keys(MAP_UI_DEFAULTS) as (keyof MapUi)[];
 
 export function mergeUi(ui: Partial<MapUi> | undefined): MapUi {
@@ -34,8 +36,20 @@ export function mergeUi(ui: Partial<MapUi> | undefined): MapUi {
 
 export interface MapPageConfig { ui: MapUi; center: [number, number]; zoom: number; lang: string }
 
+/**
+ * Texts with their icons. Symbols in front of a stored text (links sent before icons were split off) are replaced,
+ * and a stored text with a garbled character (U+FFFD) falls back to English.
+ */
+function withIcons(ui: MapUi): MapUi {
+  const out = { ...ui };
+  for (const k of MAP_UI_KEYS) if (out[k].includes("�")) out[k] = MAP_UI_DEFAULTS[k];
+  for (const [k, icon] of Object.entries(ICONS) as [keyof MapUi, string][]) out[k] = `${icon} ${out[k].replace(/^[^\p{L}\p{N}]+/u, "")}`;
+  return out;
+}
+
 export function renderMapPage(cfg: MapPageConfig | null): Response {
-  const json = JSON.stringify(cfg ?? { ui: MAP_UI_DEFAULTS, expired: true }).replace(/</g, "\\u003c");
+  const page = cfg ? { ...cfg, ui: withIcons(cfg.ui) } : { ui: withIcons(MAP_UI_DEFAULTS), expired: true };
+  const json = JSON.stringify(page).replace(/</g, "\\u003c");
   return new Response(PAGE.replace("__CONFIG__", json), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });

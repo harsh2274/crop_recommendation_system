@@ -100,6 +100,13 @@ describe("pipeline stream", () => {
     for (const h of r.hazards) for (const a of h.affectedCrops) expect(ids.has(a.cropId)).toBe(true);
     expect(r.hazards.some((h) => h.corroboratedByFarmer.length > 0)).toBe(true);
 
+    // rice is grown flooded: its water need adds field soaking and percolation, so it needs far more water than corn
+    const rice = r.cropSuitability.find((c) => c.cropId === "rice")!;
+    const corn = r.cropSuitability.find((c) => c.cropId === "corn")!;
+    expect(rice.waterUseMm).toBeGreaterThan(corn.waterUseMm + 200);
+    expect(rice.irrigationNeedMm.median).toBeGreaterThan(corn.irrigationNeedMm.median);
+    expect(rice.limitingFactors.some((f) => f.includes("water demand unmet"))).toBe(true); // rain only (sample)
+
     // excluded crops never enter a rotation
     expect(r.rotations.flatMap((s) => s.sequence.map((e) => e.crop))).not.toContain("potato");
   });

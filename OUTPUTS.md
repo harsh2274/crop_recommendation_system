@@ -159,7 +159,7 @@ Up to 4 strategies: `current` (always first), `cover`, `diversified`, `water_wis
 - `disclaimer`: always show it.
 
 ### `market` (objective 4), or `null` when no market data is loaded
-World benchmark prices for corn, soybean and wheat, computed with every report. The SMS assistant shows them only when the farmer asks how, where or when to sell (SMS.md).
+World benchmark prices for corn, soybean, wheat and rice, computed with every report. Rice is priced as milled export rice (Thai 5% broken) and its yield converted from rough to milled rice with the US milling ratio (USDA PSD milled / rough production), so `yieldTHa` and revenue are in milled tonnes. The SMS assistant shows them only when the farmer asks how, where or when to sell (SMS.md).
 
 | Field | Meaning |
 |---|---|

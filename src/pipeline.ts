@@ -242,7 +242,7 @@ export async function* runPipeline(body: unknown, deps: PipelineDeps = {}): Asyn
   const marketNote = !deps.db ? "no market database bound" : marketData ? undefined : "market data not loaded yet (run the ingestion)";
   dataSources.push(
     { id: "market_prices", dataset: "IMF world commodity prices + US CPI (via DBnomics)", provider: "IMF / US BLS via DBnomics",
-      variables: ["corn, soybean, wheat USD/t", "CPI-U"], spatialResolution: "world benchmark", temporalCoverage: "1990-latest DBnomics update, monthly",
+      variables: ["corn, soybean, wheat, rice USD/t", "CPI-U"], spatialResolution: "world benchmark", temporalCoverage: "1990-latest DBnomics update, monthly",
       status: marketData ? "ok" : "unavailable", note: marketNote ?? (marketData?.updated ? `updated ${marketData.updated.slice(0, 10)}` : undefined) },
     { id: "usda_psd", dataset: "USDA FAS PSD supply and demand (US)", provider: "USDA FAS",
       variables: ["production", "exports", "domestic consumption", "ending stocks", "yield"], spatialResolution: "United States", temporalCoverage: "1960-present (incl. current projection), annual",

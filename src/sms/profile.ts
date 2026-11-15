@@ -22,6 +22,7 @@ export interface FarmerProfile {
   analysisStatus: "none" | "running" | "done" | "failed" | "stale"; // stale = information changed after the last report
   asked: string[]; // optional questions answered or skipped (flow.ts steps)
   outcomes: { date: string; crop: string | null; text: string }[]; // what happened after a season, in the farmer's own words
+  pdfOffered: boolean; // the last text was the offer of the PDF report: a YES now means "send it"
   createdAt: string;
 }
 
@@ -29,7 +30,7 @@ export function newProfile(phone: string): FarmerProfile {
   return {
     phone, language: null, name: null, crops: [], pastCrops: [], cropAreaHa: null, growthStage: null,
     plantingDate: null, issues: [], irrigation: null, priorities: [], boundary: null, location: null,
-    analysisStatus: "none", asked: [], outcomes: [], createdAt: new Date().toISOString(),
+    analysisStatus: "none", asked: [], outcomes: [], pdfOffered: false, createdAt: new Date().toISOString(),
   };
 }
 
@@ -50,11 +51,15 @@ export function checkBoundary(ring: [number, number][]): { areaHa: number } | { 
 const MAX_ROTATION_YEARS = 4;
 
 /**
- * Rotation from what the farmer said: several crops grown now means they rotate between those crops;
- * otherwise past years (oldest first) + this season, reduced to the shortest repeating cycle.
+ * Rotation from what the farmer said. Several crops grown now: they rotate between those, after any other crops
+ * they grew in past years (past years that only repeat the current crops add nothing). One crop now: past years
+ * (oldest first) + this season, reduced to the shortest repeating cycle.
  */
 export function normalizeRotation(past: string[], current: string[]): string[] {
-  if (current.length >= 2) return [...new Set(current)].slice(0, MAX_ROTATION_YEARS);
+  if (current.length >= 2) {
+    const others = past.filter((c) => !current.includes(c));
+    return [...new Set([...others, ...current])].slice(-MAX_ROTATION_YEARS);
+  }
   return repeatingCycle([...past, ...current.slice(0, 1)]).slice(-MAX_ROTATION_YEARS);
 }
 
